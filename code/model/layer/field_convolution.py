@@ -84,12 +84,14 @@ def make_batch(points: [np.ndarray], sdfs: [np.ndarray], number_sample: int) -> 
     batch_points = numpy_tensor(np.stack(sampled_points))
     batch_sdfs = numpy_tensor(np.stack(sampled_sdfs))
     batch_thresholds = numpy_tensor(np.stack(thresholds))
+    print(batch_thresholds.shape)
 
     return {
-        "points": batch_points, "sdfs": batch_sdfs, "thresholds": thresholds,
+        "points": batch_points, "sdfs": batch_sdfs, "thresholds": batch_thresholds,
     }
 
 def nearest_point_sample(xyz: torch.Tensor, number_sample: int, sdf: torch.Tensor) -> torch.Tensor:
+    pass
 
 
 
@@ -127,21 +129,21 @@ def forward(batch: {str: torch.Tensor}):
     # Convolution input feature with the convolution weights.
 
     #
-
+    pass
 
 
 
 def test():
+
     # Load the sdf.
     point_0, sdf_0 = load_sdf("../../../data/141_S_1255_I297902_RHippo_60k.npz")
     point_1, sdf_1 = load_sdf("../../../data/1a6f615e8b1b5ae4dbbc9440457e303e.npz")
 
     # Make the sdf a batch.
-    batch = make_batch([point_0, point_1], [sdf_0, sdf_1])
+    batch = make_batch([point_0, point_1], [sdf_0, sdf_1], number_sample=16 ** 3)
 
     # Forward the batch.
     forward(batch)
-
 
 
 if __name__ == '__main__':
