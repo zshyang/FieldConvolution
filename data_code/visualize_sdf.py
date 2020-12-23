@@ -46,8 +46,29 @@ def visualize_sdf(points: np.ndarray, sdf: np.ndarray, scene: pyrender.scene.Sce
     return scene
 
 
+def get_bbox(points: np.ndarray) -> (np.ndarray, np.ndarray):
+    """Get the two most important corner of the point cloud.
+
+    Args:
+        points: The input point cloud. (N, 3)
+
+    Returns:
+        bbox_max: The max bounding box corner.
+        bbox_min: The min bounding box corner.
+    """
+
+    assert len(points.shape) == 2, "The input points dimension is not correct!"
+    assert points.shape[1] == 3, "The input is should be have 3 channel!"
+
+    bbox_max = np.max(points, axis=0)
+    bbox_min = np.min(points, axis=0)
+
+    return bbox_max, bbox_min
+
+
 def main():
     points, sdf = load_sdf("../data/141_S_1255_I297902_RHippo_60k.npz")
+    print(get_bbox(points))
     scene = pyrender.Scene()
     visualize_sdf(points, sdf, scene)
     viewer = pyrender.Viewer(scene, use_raymond_lighting=True, point_size=2)
