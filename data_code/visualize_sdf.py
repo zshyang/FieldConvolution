@@ -1,4 +1,5 @@
 import numpy as np
+import pyrender
 
 
 def load_sdf(file_name: str) -> (np.ndarray, np.ndarray):
@@ -22,17 +23,34 @@ def load_sdf(file_name: str) -> (np.ndarray, np.ndarray):
     return points, sdf
 
 
-def visualize_sdf():
-    pass
+def visualize_sdf(points: np.ndarray, sdf: np.ndarray, scene: pyrender.scene.Scene) -> pyrender.scene.Scene:
+    """Visualize the signed distance field.
+
+    Args:
+        points: The locations. (N, 3)
+        sdf: The distance. (N, 1)
+        scene: The scene to render the point cloud.
+
+    Returns:
+        scene: The scene to render the point cloud.
+    """
+
+    colors = np.zeros(points.shape)
+    colors[sdf[:, 0] < 0, 2] = 1
+    colors[sdf[:, 0] > 0, 0] = 1
+
+    cloud = pyrender.Mesh.from_points(points, colors=colors)
+
+    scene.add(cloud)
+
+    return scene
 
 
 def main():
-    output = load_sdf("../data/141_S_1255_I297902_RHippo_60k.npz")
-    print(type(output))
-
     points, sdf = load_sdf("../data/141_S_1255_I297902_RHippo_60k.npz")
-
-
+    scene = pyrender.Scene()
+    visualize_sdf(points, sdf, scene)
+    viewer = pyrender.Viewer(scene, use_raymond_lighting=True, point_size=2)
 
 
 if __name__ == '__main__':
