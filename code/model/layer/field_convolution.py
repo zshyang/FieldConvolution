@@ -90,6 +90,7 @@ def make_batch(points: [np.ndarray], sdfs: [np.ndarray], number_sample: int) -> 
         "points": batch_points, "sdfs": batch_sdfs, "thresholds": batch_thresholds,
     }
 
+
 def nearest_point_sample(xyz: torch.Tensor, number_sample: int, sdf: torch.Tensor) -> torch.Tensor:
     pass
 
@@ -118,6 +119,7 @@ def farthest_point_sample(xyz, npoint):
         farthest = torch.max(distance, -1)[1]
     return centroids
 
+
 def forward(batch: {str: torch.Tensor}):
 
     # Get the convolution center index. (B, C). C is the number of convolution center.
@@ -130,7 +132,6 @@ def forward(batch: {str: torch.Tensor}):
 
     #
     pass
-
 
 
 def test():
