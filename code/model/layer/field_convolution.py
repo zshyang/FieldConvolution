@@ -23,11 +23,11 @@ def get_sdf_threshold(sdf: np.ndarray, target_number: int):
     """Get the threshold of signed distance given a target number.
 
     Args:
-        sdf: The
-        target_number:
+        sdf: The signed distance field. (N, 1)
+        target_number: The target number to sample in the signed distance field.
 
     Returns:
-        threshold:
+        threshold: The threshold.
     """
 
     # A random initial value. It does not matter.
@@ -91,8 +91,7 @@ def make_batch(points: [np.ndarray], sdfs: [np.ndarray], number_sample: int) -> 
     # Load on to gpu.
     batch_points = numpy_tensor(np.stack(sampled_points))
     batch_sdfs = numpy_tensor(np.stack(sampled_sdfs))
-    batch_thresholds = numpy_tensor(np.stack(thresholds))
-    print(batch_thresholds.shape)
+    batch_thresholds = numpy_tensor(np.stack(thresholds)).view(batch_size, 1)
 
     return {
         "points": batch_points, "sdfs": batch_sdfs, "thresholds": batch_thresholds,
