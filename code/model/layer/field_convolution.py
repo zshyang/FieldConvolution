@@ -56,6 +56,23 @@ def get_sdf_threshold(sdf: np.ndarray, target_number: int):
     return threshold
 
 
+def nearest_index(sdf: np.ndarray, number_sample: int) -> np.ndarray:
+    """Return the index of the nearest points around the surface of the mesh.
+
+    Args:
+        sdf: The signed distance field. (N, 1)
+        number_sample: The number of sample.
+
+    Returns:
+        sort_index: The index. (Ns, 1)
+    """
+
+    sort_index = np.argsort(np.abs(sdf), axis=0)
+    sort_index = sort_index[:number_sample, :]
+
+    return sort_index
+
+
 def make_batch(points: [np.ndarray], sdfs: [np.ndarray], number_sample: int) -> {str: torch.Tensor}:
     """Make two list of points and sdfs on to GPU.
 
@@ -68,7 +85,7 @@ def make_batch(points: [np.ndarray], sdfs: [np.ndarray], number_sample: int) -> 
         A dictionary of the input batch.
             "points": The batch points. (B, N, 3)
             "sdfs": The batch signed distance fields. (B, N, 1)
-            "thresholds": The batch threshold. (B, 1)
+            "index": The batch index. (B, Ns, 1)
     """
 
     numbers = [point.shape[0] for point in points]
@@ -78,32 +95,49 @@ def make_batch(points: [np.ndarray], sdfs: [np.ndarray], number_sample: int) -> 
 
     sampled_points = []
     sampled_sdfs = []
-    thresholds = []
+    sampled_index = []
     for i in range(batch_size):
         index = np.random.randint(low=0, high=numbers[i], size=min_number)
 
         sampled_points.append(points[i][index])
         sampled_sdfs.append(sdfs[i][index])
 
-        threshold = get_sdf_threshold(sampled_sdfs[i], number_sample)
-        thresholds.append(threshold)
+        index = nearest_index(sampled_sdfs[i], number_sample)
+        sampled_index.append(index)
 
     # Load on to gpu.
     batch_points = numpy_tensor(np.stack(sampled_points))
     batch_sdfs = numpy_tensor(np.stack(sampled_sdfs))
-    batch_thresholds = numpy_tensor(np.stack(thresholds)).view(batch_size, 1)
+    batch_index = numpy_tensor(np.stack(sampled_index))
 
     return {
-        "points": batch_points, "sdfs": batch_sdfs, "thresholds": batch_thresholds,
+        "points": batch_points, "sdfs": batch_sdfs, "index": batch_index,
     }
 
 
-def nearest_point_sample(sdf: torch.Tensor, thresholds: torch.Tensor) -> torch.Tensor:
+def nearest_point_sample(sdf: torch.Tensor, thresholds: torch.Tensor, number_sample: int) -> torch.Tensor:
+
+    batch_size, number_points, _ = sdf.shape
+    device = sdf.device
+
     # Get the mask first.
-    thresholds = torch.unsqueeze(thresholds, -2)
-    print(thresholds.shape)
-    mask = torch.abs(sdf) < thresholds
-    print(mask.shape)
+    thresholds = torch.unsqueeze(thresholds, -2)  # (B, 1, 1)
+    mask = torch.abs(sdf) > thresholds  # (B, N, 1)
+
+    group_index = torch.arange(number_points, dtype=torch.long).to(device).view(1, number_points, 1).repeat([batch_size, 1, 1])
+    group_index[mask] = number_points
+    group_index = group_index.sort(dim=-2)[0][:, :number_sample, :]
+    print(group_index.shape)
+
+
+    group_idx = torch.arange(N, dtype=torch.long).to(device).view(1, 1, N).repeat([B, S, 1])
+    sqrdists = square_distance(new_xyz, xyz)
+    group_idx[sqrdists > radius ** 2] = N
+    group_idx = group_idx.sort(dim=-1)[0][:, :, :nsample]
+    group_first = group_idx[:, :, 0].view(B, S, 1).repeat([1, 1, nsample])
+    mask = group_idx == N
+    group_idx[mask] = group_first[mask]
+
 
     return mask
 
@@ -135,9 +169,10 @@ def farthest_point_sample(xyz, npoint):
 def forward(batch: {str: torch.Tensor}):
 
     # Get the convolution center index. (B, C). C is the number of convolution center.
-    nearest_point_sample(batch["sdfs"], batch["thresholds"])
+    index = torch.squeeze(batch["index"], -1)
 
     # Group the points around the convolution center given the distance to the center.
+
 
     # Get the weights given the convolution center.
 
@@ -157,9 +192,7 @@ def test():
     batch = make_batch([point_0, point_1], [sdf_0, sdf_1], number_sample=16 ** 3)
 
     # Forward the batch.
-    print(batch)
-    forward(batch)
-    print(batch)
+    forward(batch, number_sample=16 ** 3)
 
 
 if __name__ == '__main__':
