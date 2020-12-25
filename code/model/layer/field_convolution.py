@@ -43,6 +43,10 @@ def get_sdf_threshold(sdf: np.ndarray, target_number: int):
 
     while number_fit != target_number:
         threshold = (threshold_high + threshold_low) / 2.0
+
+        if threshold_high - threshold_low <= 1e-10:
+            break
+
         number_fit = np.sum(np.logical_and(sdf > -threshold, sdf < threshold))
         if number_fit > target_number:
             threshold_high = threshold
@@ -62,6 +66,9 @@ def make_batch(points: [np.ndarray], sdfs: [np.ndarray], number_sample: int) -> 
 
     Returns:
         A dictionary of the input batch.
+            "points": The batch points. (B, N, 3)
+            "sdfs": The batch signed distance fields. (B, N, 1)
+            "thresholds": The batch threshold. (B, 1)
     """
 
     numbers = [point.shape[0] for point in points]
@@ -92,9 +99,14 @@ def make_batch(points: [np.ndarray], sdfs: [np.ndarray], number_sample: int) -> 
     }
 
 
-def nearest_point_sample(xyz: torch.Tensor, number_sample: int, sdf: torch.Tensor) -> torch.Tensor:
-    pass
+def nearest_point_sample(sdf: torch.Tensor, thresholds: torch.Tensor) -> torch.Tensor:
+    # Get the mask first.
+    thresholds = torch.unsqueeze(thresholds, -2)
+    print(thresholds.shape)
+    mask = torch.abs(sdf) < thresholds
+    print(mask.shape)
 
+    return mask
 
 
 def farthest_point_sample(xyz, npoint):
@@ -124,6 +136,7 @@ def farthest_point_sample(xyz, npoint):
 def forward(batch: {str: torch.Tensor}):
 
     # Get the convolution center index. (B, C). C is the number of convolution center.
+    nearest_point_sample(batch["sdfs"], batch["thresholds"])
 
     # Group the points around the convolution center given the distance to the center.
 
@@ -132,7 +145,7 @@ def forward(batch: {str: torch.Tensor}):
     # Convolution input feature with the convolution weights.
 
     #
-    pass
+    return True
 
 
 def test():
@@ -145,7 +158,9 @@ def test():
     batch = make_batch([point_0, point_1], [sdf_0, sdf_1], number_sample=16 ** 3)
 
     # Forward the batch.
+    print(batch)
     forward(batch)
+    print(batch)
 
 
 if __name__ == '__main__':
