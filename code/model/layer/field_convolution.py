@@ -58,6 +58,7 @@ def make_batch(points: [np.ndarray], sdfs: [np.ndarray], number_sample: int) -> 
     Args:
         points: The list of the points.
         sdfs: The list of the signed distance fields.
+        number_sample: The number points to be sampled on the surface.
 
     Returns:
         A dictionary of the input batch.
