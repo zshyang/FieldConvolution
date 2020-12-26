@@ -193,6 +193,50 @@ def index_points(points: torch.Tensor, idx: torch.Tensor) -> torch.Tensor:
     return new_points
 
 
+def sample_and_group(npoint, radius, nsample, xyz, points, returnfps=False):
+    """
+    Input:
+        npoint:
+        radius:
+        nsample:
+        xyz: input points position data, [B, N, 3]
+        points: input points data, [B, N, D]
+    Return:
+        new_xyz: sampled points position data, [B, npoint, nsample, 3]
+        new_points: sampled points data, [B, npoint, nsample, 3+D]
+    """
+    B, N, C = xyz.shape
+    S = npoint
+    fps_idx = farthest_point_sample(xyz, npoint) # [B, npoint, C]
+    torch.cuda.empty_cache()
+    new_xyz = index_points(xyz, fps_idx)
+    torch.cuda.empty_cache()
+    idx = query_ball_point(radius, nsample, xyz, new_xyz)
+    torch.cuda.empty_cache()
+    grouped_xyz = index_points(xyz, idx) # [B, npoint, nsample, C]
+    torch.cuda.empty_cache()
+    grouped_xyz_norm = grouped_xyz - new_xyz.view(B, S, 1, C)
+    torch.cuda.empty_cache()
+
+    if points is not None:
+        grouped_points = index_points(points, idx)
+        new_points = torch.cat([grouped_xyz_norm, grouped_points], dim=-1) # [B, npoint, nsample, C+D]
+    else:
+        new_points = grouped_xyz_norm
+    if returnfps:
+        return new_xyz, new_points, grouped_xyz, fps_idx
+    else:
+        return new_xyz, new_points
+
+
+def group(nearest_index: torch.Tensor, neighbor_sample=32):
+
+    new_xyz = index_points(xyz, fps_idx)
+    torch.cuda.empty_cache()
+    idx = query_ball_point(radius, nsample, xyz, new_xyz)
+    pass
+
+
 def forward(batch: {str: torch.Tensor}):
 
     # Get the convolution center index. (B, C). C is the number of convolution center.
@@ -219,7 +263,7 @@ def test():
     batch = make_batch([point_0, point_1], [sdf_0, sdf_1], number_sample=16 ** 3)
 
     # Forward the batch.
-    forward(batch, number_sample=16 ** 3)
+    forward(batch)
 
 
 if __name__ == '__main__':
