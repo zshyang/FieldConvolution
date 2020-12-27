@@ -251,8 +251,9 @@ def abs_distance(src, dst):
     _, number_m, _ = dst.shape
 
     dist = torch.max(
-        src.view(batch_size, number_n, 1, 3) - dst.view(batch_size, 1, number_m, 3),
-        dim=-1
+        torch.abs(
+            src.view(batch_size, number_n, 1, 3) - dst.view(batch_size, 1, number_m, 3)
+        ), dim=-1
     )
 
     return dist
