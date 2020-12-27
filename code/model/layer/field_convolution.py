@@ -228,10 +228,75 @@ def sample_and_group(npoint, radius, nsample, xyz, points, returnfps=False):
     else:
         return new_xyz, new_points
 
+def abs_distance(src, dst):
 
-def group(nearest_index: torch.Tensor, neighbor_sample=32):
 
-    new_xyz = index_points(xyz, fps_idx)
+
+def query_cube_point(edge, neighbor_sample_number, points, center_points):
+    assert len(points.shape) == 3, "The dimension of points should be 3!"
+    assert points.shape[-1] == 3, "The point should be in 3D space!"
+    assert len(center_points) == 3, "The dimension of center points should be 3!"
+    assert center_points.shape[-1] == 3, "The point should be in 3D space!"
+
+    device = points.device
+    batch_size, number_points, number_channel = points.shape
+    _, number_sample, _ = center_points.shape
+
+    group_index = torch.arange(
+        number_points, dtype=torch.long
+    ).to(device).view(1, 1, number_points).repeat([batch_size, number_sample, 1])
+
+    abs_distance(center_points, points)
+
+
+def query_ball_point(radius, nsample, xyz, new_xyz):
+    """
+    Input:
+        radius: local region radius
+        nsample: max sample number in local region
+        xyz: all points, [B, N, 3]
+        new_xyz: query points, [B, S, 3]
+    Return:
+        group_idx: grouped points index, [B, S, nsample]
+    """
+    device = xyz.device
+    B, N, C = xyz.shape
+    _, S, _ = new_xyz.shape
+    group_idx = torch.arange(N, dtype=torch.long).to(device).view(1, 1, N).repeat([B, S, 1])
+    sqrdists = square_distance(new_xyz, xyz)
+    group_idx[sqrdists > radius ** 2] = N
+    group_idx = group_idx.sort(dim=-1)[0][:, :, :nsample]
+    group_first = group_idx[:, :, 0].view(B, S, 1).repeat([1, 1, nsample])
+    mask = group_idx == N
+    group_idx[mask] = group_first[mask]
+    return group_idx
+
+
+def square_distance(src, dst):
+    """
+    Calculate Euclid distance between each two points.
+    src^T * dst = xn * xm + yn * ym + zn * zm；
+    sum(src^2, dim=-1) = xn*xn + yn*yn + zn*zn;
+    sum(dst^2, dim=-1) = xm*xm + ym*ym + zm*zm;
+    dist = (xn - xm)^2 + (yn - ym)^2 + (zn - zm)^2
+         = sum(src**2,dim=-1)+sum(dst**2,dim=-1)-2*src^T*dst
+    Input:
+        src: source points, [B, N, C]
+        dst: target points, [B, M, C]
+    Output:
+        dist: per-point square distance, [B, N, M]
+    """
+    B, N, _ = src.shape
+    _, M, _ = dst.shape
+    dist = -2 * torch.matmul(src, dst.permute(0, 2, 1))
+    dist += torch.sum(src ** 2, -1).view(B, N, 1)
+    dist += torch.sum(dst ** 2, -1).view(B, 1, M)
+    return dist
+
+
+def group(index: torch.Tensor, xyz: torch.Tensor, neighbor_sample=32):
+
+    new_xyz = index_points(xyz, index)  # (B, Ns, 3)
     torch.cuda.empty_cache()
     idx = query_ball_point(radius, nsample, xyz, new_xyz)
     pass
@@ -243,6 +308,7 @@ def forward(batch: {str: torch.Tensor}):
     index = torch.squeeze(batch["index"], -1)
 
     # Group the points around the convolution center given the distance to the center.
+    group(index, batch["points"])
 
 
     # Get the weights given the convolution center.
