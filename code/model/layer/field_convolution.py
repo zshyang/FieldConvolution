@@ -228,8 +228,37 @@ def sample_and_group(npoint, radius, nsample, xyz, points, returnfps=False):
     else:
         return new_xyz, new_points
 
-def abs_distance(src, dst):
 
+def abs_distance(src, dst):
+    """Calculate absolute distance between each two points.
+    dist = max(abs(xn - xm), abs(yn - ym), abs(zn - zm))
+
+    Args:
+        src: Source points, (B, N, C)
+        dst: Target points, (B, M, C)
+
+    Returns:
+        dist: Per-point abs distance, (B, N, M)
+    """
+
+    assert len(src) == 3, "The source points should be a 3D tensor!"
+    assert len(dst) == 3, "The target points should be a 3D tensor!"
+    assert src.shape[0] == dst.shape[0], "The batch size should be same!"
+    assert src.shape[-1] == 3, "The source points should be a point cloud!"
+    assert dst.shape[-1] == 3, "The target points should be a point cloud!"
+
+    batch_size, number_n, _ = src.shape
+    _, number_m, _ = dst.shape
+
+    dist = torch.max(
+        src.view(batch_size, number_n, 1, 3) - dst.view(batch_size, 1, number_m, 3),
+        dim=-1
+    )
+
+    dist = -2 * torch.matmul(src, dst.permute(0, 2, 1))
+    dist += torch.sum(src ** 2, -1).view(B, N, 1)
+    dist += torch.sum(dst ** 2, -1).view(B, 1, M)
+    return dist
 
 
 def query_cube_point(edge, neighbor_sample_number, points, center_points):
