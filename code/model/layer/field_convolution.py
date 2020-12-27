@@ -259,12 +259,28 @@ def abs_distance(src, dst):
     return dist
 
 
-def query_cube_point(edge, neighbor_sample_number, points, center_points):
+def query_cube_point(
+        edge: float, neighbor_sample_number: int, points: torch.Tensor, center_points: torch.Tensor
+) -> torch.Tensor:
+    """Query the index of the point cloud within the cube.
+
+    Args:
+        edge: The edge length of the cube.
+        neighbor_sample_number: The number to be sampled within the cube.
+        points: The large point cloud.
+        center_points: The convolution center points.
+
+    Returns:
+        group_index: The index to be selected for the large point cloud.
+    """
+
+    # Conditions.
     assert len(points.shape) == 3, "The dimension of points should be 3!"
     assert points.shape[-1] == 3, "The point should be in 3D space!"
     assert len(center_points) == 3, "The dimension of center points should be 3!"
     assert center_points.shape[-1] == 3, "The point should be in 3D space!"
 
+    # Set up.
     device = points.device
     batch_size, number_points, number_channel = points.shape
     _, number_sample, _ = center_points.shape
@@ -273,7 +289,18 @@ def query_cube_point(edge, neighbor_sample_number, points, center_points):
         number_points, dtype=torch.long
     ).to(device).view(1, 1, number_points).repeat([batch_size, number_sample, 1])
 
-    abs_distance(center_points, points)
+    abs_distances = abs_distance(center_points, points)
+
+    group_index[abs_distances > (edge / 2.0)] = number_points
+
+    group_index = group_index.sort(dim=-1)[0][:, :, :neighbor_sample_number]
+
+    # Make the points with index outside of the cube with the index within the cube.
+    group_first = group_index[:, :, 0].view(batch_size, number_sample, 1).repeat(1, 1, neighbor_sample_number)
+    mask = group_index == number_points
+    group_index[mask] = group_first[mask]
+
+    return group_index
 
 
 def query_ball_point(radius, nsample, xyz, new_xyz):
