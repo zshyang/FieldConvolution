@@ -255,9 +255,6 @@ def abs_distance(src, dst):
         dim=-1
     )
 
-    dist = -2 * torch.matmul(src, dst.permute(0, 2, 1))
-    dist += torch.sum(src ** 2, -1).view(B, N, 1)
-    dist += torch.sum(dst ** 2, -1).view(B, 1, M)
     return dist
 
 
