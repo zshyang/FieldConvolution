@@ -3,6 +3,8 @@ import torch
 import torch.nn as nn
 from data_code.visualize_sdf import load_sdf
 from typing import Union
+from torch.nn.parameter import Parameter
+import math
 
 
 def numpy_tensor(numpy_array: np.ndarray) -> torch.Tensor:
@@ -407,10 +409,10 @@ class FieldConv(nn.Module):
         Args:
             edge_length: The length of the cube. Equivalent to the length of the filter.
             filter_sample_number: The number of point to be sampled within the filter.
-                Equivalent to the filter size.
-            center_number: The number of convolution centers. Equivalent to the stride of the filter.
-            in_channels (int): Number of channels in the input image
-            out_channels (int): Number of channels produced by the convolution
+                Equivalent to the filter size. Noted as Nn.
+            center_number: The number of convolution centers. Equivalent to the stride of the filter. Noted as Nc.
+            in_channels (int): Number of channels in the input image. Noted as I.
+            out_channels (int): Number of channels produced by the convolution. Noted as O.
         """
 
         super(FieldConv, self).__init__()
@@ -420,6 +422,11 @@ class FieldConv(nn.Module):
         self.center_number = center_number
         self.in_channels = in_channels
         self.out_channels = out_channels
+
+        self.weight_net = WeightNet(3, out_channels * in_channels)
+
+        self.bias = Parameter(torch.empty(1, 1, out_channels))
+        nn.init.kaiming_uniform_(self.bias, a=math.sqrt(5))
 
     def forward(self, inputs: {str: torch.Tensor}):
         """The forward function.
@@ -449,12 +456,23 @@ class FieldConv(nn.Module):
         # Group the points around the convolution center given the distance to the center.
         grouped_xyz_norm, grouped_feature, new_xyz = group(
             indices, points, sdfs, self.edge_length, self.filter_sample_number
-        )
+        )  # (B, Nc, Nn, 3), (B, Bc, Nn, F), (B, Nc, 3)
 
         # Get the weights given the convolution center.
+        weight = self.weight_net(grouped_xyz_norm)  # (B, Nc, Nn, I * O)
+        weight_shape = list(weight.shape)
+        weight_shape[-1] = self.out_channels
+        weight_shape.append(self.in_channels)
+        weight = weight.view(weight_shape)
 
+        # Convolution input feature with the convolution weight and bias.
+        feature = torch.unsqueeze(grouped_feature, -1)  # (B, Nc, Nn, I, 1)
+        print(weight.shape, feature.shape)
+        feature = torch.einsum("abcij,abcjk->abcik", weight, feature)  # (B, Nc, Nn, O, 1)
+        feature = torch.squeeze(feature, -1)  # (B, Nc, Nn, O)
+        feature = torch.max(feature, 2)[0] + self.bias
 
-        return True
+        return feature
 
 
 class WeightNet(nn.Module):
@@ -464,6 +482,9 @@ class WeightNet(nn.Module):
         """The initialization function.
         """
         super(WeightNet, self).__init__()
+
+        assert dim_in == 3, "The input should be a position of a point!"
+
         self.dim_in = dim_in
         self.dim_out = dim_out
         self.dim_hid = dim_in * 2  # To keep the network's size.
@@ -471,10 +492,13 @@ class WeightNet(nn.Module):
             nn.Linear(in_features=self.dim_in, out_features=self.dim_hid),
             nn.ReLU(True),
             nn.BatchNorm1d(self.dim_hid),
+            nn.Linear(in_features=self.dim_hid, out_features=self.dim_hid),
+            nn.ReLU(True),
+            nn.BatchNorm1d(self.dim_hid),
             nn.Linear(in_features=self.dim_hid, out_features=self.dim_out),
         )
 
-    def forward(self, feature: torch.Tensor):
+    def forward(self, feature: torch.Tensor) -> torch.Tensor:
         """The forward function.
 
         Args:
@@ -483,24 +507,14 @@ class WeightNet(nn.Module):
         Returns:
             The feature after the weight net.
         """
-        return self.weight_net(feature)
 
+        assert len(feature.shape) == 4, "The dimension of the feature should be 4 not {}!".format(len(feature.shape))
+        assert feature.shape[3] == self.dim_in, "The input feature should have same channel size as setting!"
 
-def forward(batch: {str: torch.Tensor}):
+        view_shape = list(feature.shape)
+        view_shape[-1] = self.dim_out
 
-    # Get the convolution center index. (B, C). C is the number of convolution center.
-    index = torch.squeeze(batch["index"], -1)
-
-    # Group the points around the convolution center given the distance to the center.
-    group(index, batch["points"])
-
-
-    # Get the weights given the convolution center.
-
-    # Convolution input feature with the convolution weights.
-
-    #
-    return True
+        return self.weight_net(feature.view(-1, 3)).view(view_shape)
 
 
 def test():
@@ -515,8 +529,10 @@ def test():
     # Forward the batch.
     field_conv = FieldConv(
         edge_length=0.03, filter_sample_number=64, center_number=16**3, in_channels=1, out_channels=2
-    )
-    field_conv(batch)
+    ).cuda()
+
+    feature = field_conv(batch)
+    print(feature.shape)
 
 
 if __name__ == '__main__':
