@@ -90,7 +90,7 @@ def make_batch(points: [np.ndarray], sdfs: [np.ndarray], number_sample: int) -> 
     """
 
     numbers = [point.shape[0] for point in points]
-    min_number = min(numbers) / 10
+    min_number = int(min(numbers) / 10)
 
     batch_size = len(points)
 
@@ -432,25 +432,12 @@ class FieldConv(nn.Module):
         assert sdfs.shape[2] == 1, "The signed distance field should have 1 at last dimension!"
 
         # Get the convolution center index. (B, C). C is the number of convolution center.
-        sorted, indices = torch.sort(x)
-        torch.sort(torch.abs(sdfs), 1)
-        index = torch.squeeze(batch["index"], -1)
+        # sorted, indices = torch.sort(x)
+        _, indices = torch.sort(torch.abs(sdfs), 1)
+        indices = indices[:, :self.center_number, :]
+        indices = torch.squeeze(indices, -1)
+        print(indices.shape)
 
-        def nearest_index(sdf: np.ndarray, number_sample: int) -> np.ndarray:
-            """Return the index of the nearest points around the surface of the mesh.
-
-            Args:
-                sdf: The signed distance field. (N, 1)
-                number_sample: The number of sample.
-
-            Returns:
-                sort_index: The index. (Ns, 1)
-            """
-
-            sort_index = np.argsort(np.abs(sdf), axis=0)
-            sort_index = sort_index[:number_sample, :]
-
-            return sort_index
         return True
 
 
