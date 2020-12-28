@@ -460,30 +460,30 @@ class FieldConv(nn.Module):
 class WeightNet(nn.Module):
     """The network used to compute weight.
     """
-    def __init__(self, dim_in, dim_out):
+    def __init__(self, dim_in: int, dim_out: int):
         """The initialization function.
         """
         super(WeightNet, self).__init__()
         self.dim_in = dim_in
         self.dim_out = dim_out
-        self.dim_hid = (dim_in + dim_out) // 2
-        self.pointnet = nn.Sequential(
+        self.dim_hid = dim_in * 2  # To keep the network's size.
+        self.weight_net = nn.Sequential(
             nn.Linear(in_features=self.dim_in, out_features=self.dim_hid),
             nn.ReLU(True),
             nn.BatchNorm1d(self.dim_hid),
             nn.Linear(in_features=self.dim_hid, out_features=self.dim_out),
         )
 
-    def forward(self, feature):
+    def forward(self, feature: torch.Tensor):
         """The forward function.
 
         Args:
             feature: The input feature. (B, N, K, F)
 
         Returns:
-            The feature after pointnet.
+            The feature after the weight net.
         """
-        return self.pointnet(feature)
+        return self.weight_net(feature)
 
 
 def forward(batch: {str: torch.Tensor}):
