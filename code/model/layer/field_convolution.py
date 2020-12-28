@@ -98,23 +98,18 @@ def make_batch(points: [np.ndarray], sdfs: [np.ndarray], number_sample: int) -> 
 
     sampled_points = []
     sampled_sdfs = []
-    sampled_index = []
     for i in range(batch_size):
         index = np.random.randint(low=0, high=numbers[i], size=min_number)
 
         sampled_points.append(points[i][index])
         sampled_sdfs.append(sdfs[i][index])
 
-        index = nearest_index(sampled_sdfs[i], number_sample)
-        sampled_index.append(index)
-
     # Load on to gpu.
     batch_points = numpy_tensor(np.stack(sampled_points))
     batch_sdfs = numpy_tensor(np.stack(sampled_sdfs))
-    batch_index = numpy_tensor(np.stack(sampled_index))
 
     return {
-        "points": batch_points, "sdfs": batch_sdfs, "index": batch_index,
+        "points": batch_points, "sdfs": batch_sdfs,
     }
 
 
