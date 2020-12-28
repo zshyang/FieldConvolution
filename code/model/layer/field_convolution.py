@@ -90,7 +90,7 @@ def make_batch(points: [np.ndarray], sdfs: [np.ndarray], number_sample: int) -> 
     """
 
     numbers = [point.shape[0] for point in points]
-    min_number = int(min(numbers) / 10)
+    min_number = int(min(numbers) / 30)
 
     batch_size = len(points)
 
@@ -242,8 +242,8 @@ def abs_distance(src, dst):
         dist: Per-point abs distance, (B, N, M)
     """
 
-    assert len(src) == 3, "The source points should be a 3D tensor!"
-    assert len(dst) == 3, "The target points should be a 3D tensor!"
+    assert len(src.shape) == 3, "The source points should be a 3D tensor!"
+    assert len(dst.shape) == 3, "The target points should be a 3D tensor!"
     assert src.shape[0] == dst.shape[0], "The batch size should be same!"
     assert src.shape[-1] == 3, "The source points should be a point cloud!"
     assert dst.shape[-1] == 3, "The target points should be a point cloud!"
@@ -255,7 +255,7 @@ def abs_distance(src, dst):
         torch.abs(
             src.view(batch_size, number_n, 1, 3) - dst.view(batch_size, 1, number_m, 3)
         ), dim=-1
-    )
+    )[0]
 
     return dist
 
@@ -349,10 +349,10 @@ def square_distance(src, dst):
     return dist
 
 
-def group(index: torch.Tensor, xyz: torch.Tensor, neighbor_sample=32):
+def group(index: torch.Tensor, xyz: torch.Tensor, feature: torch.Tensor, neighbor_sample=32):
+
 
     new_xyz = index_points(xyz, index)  # (B, Ns, 3)
-    print(xyz.shape, new_xyz.shape)
     torch.cuda.empty_cache()
 
     index = query_cube_point(
@@ -361,16 +361,15 @@ def group(index: torch.Tensor, xyz: torch.Tensor, neighbor_sample=32):
     )
     torch.cuda.empty_cache()
 
-    grouped_xyz = index_points(xyz, index)
-    print(grouped_xyz.shape)
-
-
-
-
-    idx = query_ball_point(radius, nsample, xyz, new_xyz)
+    grouped_xyz = index_points(xyz, index)  # (B, Ns, Nn, 3)
     torch.cuda.empty_cache()
-    grouped_xyz = index_points(xyz, idx)  # [B, npoint, nsample, C]
-    torch.cuda.empty_cache()
+
+    grouped_xyz_normal = grouped_xyz - new_xyz.view()
+
+
+
+
+
     grouped_xyz_norm = grouped_xyz - new_xyz.view(B, S, 1, C)
     torch.cuda.empty_cache()
 
@@ -432,11 +431,12 @@ class FieldConv(nn.Module):
         assert sdfs.shape[2] == 1, "The signed distance field should have 1 at last dimension!"
 
         # Get the convolution center index. (B, C). C is the number of convolution center.
-        # sorted, indices = torch.sort(x)
         _, indices = torch.sort(torch.abs(sdfs), 1)
         indices = indices[:, :self.center_number, :]
         indices = torch.squeeze(indices, -1)
-        print(indices.shape)
+
+        # Group the points around the convolution center given the distance to the center.
+        group(indices, points)
 
         return True
 
