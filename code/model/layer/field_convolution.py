@@ -59,23 +59,6 @@ def get_sdf_threshold(sdf: np.ndarray, target_number: int):
     return threshold
 
 
-def nearest_index(sdf: np.ndarray, number_sample: int) -> np.ndarray:
-    """Return the index of the nearest points around the surface of the mesh.
-
-    Args:
-        sdf: The signed distance field. (N, 1)
-        number_sample: The number of sample.
-
-    Returns:
-        sort_index: The index. (Ns, 1)
-    """
-
-    sort_index = np.argsort(np.abs(sdf), axis=0)
-    sort_index = sort_index[:number_sample, :]
-
-    return sort_index
-
-
 def make_batch(points: [np.ndarray], sdfs: [np.ndarray], number_sample: int) -> {str: torch.Tensor}:
     """Make two list of points and sdfs on to GPU.
 
