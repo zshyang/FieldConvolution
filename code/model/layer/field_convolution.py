@@ -210,7 +210,8 @@ class FieldConv(nn.Module):
     """Field convolution layer.
     """
     def __init__(
-        self, edge_length: float, filter_sample_number: int, center_number: int, in_channels: int, out_channels: int
+        self, edge_length: float, filter_sample_number: int, center_number: int, in_channels: int, out_channels: int,
+        feature_is_sdf: bool
     ):
         """The initialization function.
 
@@ -221,6 +222,7 @@ class FieldConv(nn.Module):
             center_number: The number of convolution centers. Equivalent to the stride of the filter. Noted as Nc.
             in_channels (int): Number of channels in the input image. Noted as I.
             out_channels (int): Number of channels produced by the convolution. Noted as O.
+            feature_is_sdf: The indicator of whether the input contains sdf as its feature.
         """
 
         super(FieldConv, self).__init__()
@@ -230,34 +232,36 @@ class FieldConv(nn.Module):
         self.center_number = center_number
         self.in_channels = in_channels
         self.out_channels = out_channels
+        self.feature_is_sdf = feature_is_sdf
 
         self.weight_net = WeightNet(3, out_channels * in_channels)
 
         self.bias = Parameter(torch.empty(1, 1, out_channels))
         nn.init.kaiming_uniform_(self.bias, a=math.sqrt(5))
 
-    def forward(self, inputs: {str: torch.Tensor}):
+    def forward(self, in_feature: torch.Tensor):
         """The forward function.
 
         Args:
-            inputs: The dictionary of the inputs.
+            in_feature: The input feature with the concatenation of the following two tensors.
                points: The input point clouds. (B, N, 3)
-               sdfs: The signed distance fields. (B, N, 1)
+               feature: The signed distance fields. (B, N, Fin)
 
         Returns:
-
+            out_feature: The output feature with the concatenation of the following two tensors.
+               points: The input point clouds. (B, Nc, 3)
+               feature: The signed distance fields. (B, Nc, Fout)
         """
 
-        points = inputs["points"]
-        sdfs = inputs["sdfs"]
+        points = in_feature[:, :, :3]
+        feature = in_feature[:, :, 3:]
 
         assert len(points.shape) == 3, "The input point cloud should be batched!"
-        assert len(sdfs.shape) == 3, "The input signed distance field should be batched!"
+        assert len(feature.shape) == 3, "The input signed distance field should be batched!"
         assert points.shape[2] == 3, "The input point cloud should be in 3D space!"
-        assert sdfs.shape[2] == 1, "The signed distance field should have 1 at last dimension!"
 
         # Get the convolution center index. (B, C). C is the number of convolution center.
-        _, indices = torch.sort(torch.abs(sdfs), 1)
+        _, indices = torch.sort(torch.abs(), 1)
         indices = indices[:, :self.center_number, :]
         indices = torch.squeeze(indices, -1)
 
