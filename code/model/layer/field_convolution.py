@@ -261,14 +261,19 @@ class FieldConv(nn.Module):
         assert points.shape[2] == 3, "The input point cloud should be in 3D space!"
 
         # Get the convolution center index. (B, C). C is the number of convolution center.
-        _, indices = torch.sort(torch.abs(), 1)
-        indices = indices[:, :self.center_number, :]
-        indices = torch.squeeze(indices, -1)
+        if self.feature_is_sdf:
+            _, indices = torch.sort(torch.abs(feature), 1)
+            indices = indices[:, :self.center_number, :]
+            indices = torch.squeeze(indices, -1)
+        else:
+            _, indices = torch.sort(torch.norm(feature, dim=-1, keepdim=True), 1)
+            indices = indices[:, :self.center_number, :]
+            indices = torch.squeeze(indices, -1)
 
         # Group the points around the convolution center given the distance to the center.
         grouped_xyz_norm, grouped_feature, new_xyz = group(
-            indices, points, sdfs, self.edge_length, self.filter_sample_number
-        )  # (B, Nc, Nn, 3), (B, Bc, Nn, F), (B, Nc, 3)
+            indices, points, feature, self.edge_length, self.filter_sample_number
+        )  # (B, Nc, Nn, 3), (B, Bc, Nn, Fin), (B, Nc, 3)
 
         # Get the weights given the convolution center.
         weight = self.weight_net(grouped_xyz_norm)  # (B, Nc, Nn, I * O)
@@ -283,7 +288,10 @@ class FieldConv(nn.Module):
         feature = torch.squeeze(feature, -1)  # (B, Nc, Nn, O)
         feature = torch.max(feature, 2)[0] + self.bias
 
-        return feature
+        # Concatenate the new location and new feature.
+        out_feature = torch.cat([new_xyz, feature], -1)
+
+        return out_feature
 
 
 class WeightNet(nn.Module):
@@ -339,10 +347,11 @@ def test():
 
     # Forward the batch.
     field_conv = FieldConv(
-        edge_length=0.03, filter_sample_number=64, center_number=16**3, in_channels=1, out_channels=2
+        edge_length=0.03, filter_sample_number=64, center_number=16**3, in_channels=1, out_channels=2,
+        feature_is_sdf=False
     ).cuda()
 
-    feature = field_conv(batch)
+    feature = field_conv(torch.cat([batch["points"], batch["sdfs"]], -1))
     print(feature.shape)
 
 
