@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import torch.nn as nn
 from data_code.visualize_sdf import load_sdf
 
 
@@ -383,6 +384,57 @@ def group(index: torch.Tensor, xyz: torch.Tensor, neighbor_sample=32):
     else:
         return new_xyz, new_points
     pass
+
+
+class FieldConv(nn.Module):
+    """Field convolution layer.
+    """
+    def __init__(self, edge_length: float, filter_sample_number: int, center_number: int):
+        """The initialization function.
+
+        Args:
+            edge_length: The length of the cube. Equivalent to the length of the filter.
+            filter_sample_number: The number of point to be sampled within the filter.
+                Equivalent to the filter size.
+            center_number: The number of convolution centers. Equivalent to the stride of the filter.
+        """
+
+        super(FieldConv, self).__init__()
+
+        self.edge_length = edge_length
+        self.filter_sample_number = filter_sample_number
+        self.center_number = center_number
+
+    def forward(self, inputs: dict):
+        """The forward function.
+
+        Args:
+            inputs: The dictionary of the inputs.
+
+        Returns:
+
+        """
+
+
+
+        def nearest_index(sdf: np.ndarray, number_sample: int) -> np.ndarray:
+            """Return the index of the nearest points around the surface of the mesh.
+
+            Args:
+                sdf: The signed distance field. (N, 1)
+                number_sample: The number of sample.
+
+            Returns:
+                sort_index: The index. (Ns, 1)
+            """
+
+            sort_index = np.argsort(np.abs(sdf), axis=0)
+            sort_index = sort_index[:number_sample, :]
+
+            return sort_index
+        return True
+
+
 
 
 def forward(batch: {str: torch.Tensor}):
