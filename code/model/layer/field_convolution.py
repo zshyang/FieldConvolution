@@ -447,11 +447,43 @@ class FieldConv(nn.Module):
         indices = torch.squeeze(indices, -1)
 
         # Group the points around the convolution center given the distance to the center.
-        group(indices, points, sdfs, self.edge_length, self.filter_sample_number)
+        grouped_xyz_norm, grouped_feature, new_xyz = group(
+            indices, points, sdfs, self.edge_length, self.filter_sample_number
+        )
+
+        # Get the weights given the convolution center.
+
 
         return True
 
 
+class WeightNet(nn.Module):
+    """The network used to compute weight.
+    """
+    def __init__(self, dim_in, dim_out):
+        """The initialization function.
+        """
+        super(WeightNet, self).__init__()
+        self.dim_in = dim_in
+        self.dim_out = dim_out
+        self.dim_hid = (dim_in + dim_out) // 2
+        self.pointnet = nn.Sequential(
+            nn.Linear(in_features=self.dim_in, out_features=self.dim_hid),
+            nn.ReLU(True),
+            nn.BatchNorm1d(self.dim_hid),
+            nn.Linear(in_features=self.dim_hid, out_features=self.dim_out),
+        )
+
+    def forward(self, feature):
+        """The forward function.
+
+        Args:
+            feature: The input feature. (B, N, K, F)
+
+        Returns:
+            The feature after pointnet.
+        """
+        return self.pointnet(feature)
 
 
 def forward(batch: {str: torch.Tensor}):
