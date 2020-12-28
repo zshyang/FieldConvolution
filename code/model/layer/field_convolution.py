@@ -389,7 +389,9 @@ def group(index: torch.Tensor, xyz: torch.Tensor, neighbor_sample=32):
 class FieldConv(nn.Module):
     """Field convolution layer.
     """
-    def __init__(self, edge_length: float, filter_sample_number: int, center_number: int):
+    def __init__(
+        self, edge_length: float, filter_sample_number: int, center_number: int, in_channels: int, out_channels: int
+    ):
         """The initialization function.
 
         Args:
@@ -397,6 +399,8 @@ class FieldConv(nn.Module):
             filter_sample_number: The number of point to be sampled within the filter.
                 Equivalent to the filter size.
             center_number: The number of convolution centers. Equivalent to the stride of the filter.
+            in_channels (int): Number of channels in the input image
+            out_channels (int): Number of channels produced by the convolution
         """
 
         super(FieldConv, self).__init__()
@@ -404,8 +408,10 @@ class FieldConv(nn.Module):
         self.edge_length = edge_length
         self.filter_sample_number = filter_sample_number
         self.center_number = center_number
+        self.in_channels = in_channels
+        self.out_channels = out_channels
 
-    def forward(self, inputs: dict):
+    def forward(self, inputs: {str: torch.Tensor}):
         """The forward function.
 
         Args:
@@ -415,7 +421,8 @@ class FieldConv(nn.Module):
 
         """
 
-
+        # Get the convolution center index. (B, C). C is the number of convolution center.
+        index = torch.squeeze(batch["index"], -1)
 
         def nearest_index(sdf: np.ndarray, number_sample: int) -> np.ndarray:
             """Return the index of the nearest points around the surface of the mesh.
@@ -464,6 +471,8 @@ def test():
     batch = make_batch([point_0, point_1], [sdf_0, sdf_1], number_sample=16 ** 3)
 
     # Forward the batch.
+    FieldConv
+
     forward(batch)
 
 
