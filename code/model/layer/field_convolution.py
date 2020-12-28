@@ -276,8 +276,8 @@ def query_cube_point(
 
     # Conditions.
     assert len(points.shape) == 3, "The dimension of points should be 3!"
+    assert len(center_points.shape) == 3, "The dimension of center points should be 3!"
     assert points.shape[-1] == 3, "The point should be in 3D space!"
-    assert len(center_points) == 3, "The dimension of center points should be 3!"
     assert center_points.shape[-1] == 3, "The point should be in 3D space!"
 
     # Set up.
@@ -351,8 +351,37 @@ def square_distance(src, dst):
 def group(index: torch.Tensor, xyz: torch.Tensor, neighbor_sample=32):
 
     new_xyz = index_points(xyz, index)  # (B, Ns, 3)
+    print(xyz.shape, new_xyz.shape)
     torch.cuda.empty_cache()
+
+    index = query_cube_point(
+        edge=0.03, neighbor_sample_number=neighbor_sample,
+        points=xyz, center_points=new_xyz
+    )
+    torch.cuda.empty_cache()
+
+    grouped_xyz = index_points(xyz, index)
+    print(grouped_xyz.shape)
+
+
+
+
     idx = query_ball_point(radius, nsample, xyz, new_xyz)
+    torch.cuda.empty_cache()
+    grouped_xyz = index_points(xyz, idx)  # [B, npoint, nsample, C]
+    torch.cuda.empty_cache()
+    grouped_xyz_norm = grouped_xyz - new_xyz.view(B, S, 1, C)
+    torch.cuda.empty_cache()
+
+    if points is not None:
+        grouped_points = index_points(points, idx)
+        new_points = torch.cat([grouped_xyz_norm, grouped_points], dim=-1)  # [B, npoint, nsample, C+D]
+    else:
+        new_points = grouped_xyz_norm
+    if returnfps:
+        return new_xyz, new_points, grouped_xyz, fps_idx
+    else:
+        return new_xyz, new_points
     pass
 
 
