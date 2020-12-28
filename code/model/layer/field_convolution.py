@@ -90,7 +90,7 @@ def make_batch(points: [np.ndarray], sdfs: [np.ndarray], number_sample: int) -> 
     """
 
     numbers = [point.shape[0] for point in points]
-    min_number = min(numbers)
+    min_number = min(numbers) / 10
 
     batch_size = len(points)
 
@@ -423,8 +423,17 @@ class FieldConv(nn.Module):
 
         """
 
+        points = inputs["points"]
+        sdfs = inputs["sdfs"]
+
+        assert len(points.shape) == 3, "The input point cloud should be batched!"
+        assert len(sdfs.shape) == 3, "The input signed distance field should be batched!"
+        assert points.shape[2] == 3, "The input point cloud should be in 3D space!"
+        assert sdfs.shape[2] == 1, "The signed distance field should have 1 at last dimension!"
 
         # Get the convolution center index. (B, C). C is the number of convolution center.
+        sorted, indices = torch.sort(x)
+        torch.sort(torch.abs(sdfs), 1)
         index = torch.squeeze(batch["index"], -1)
 
         def nearest_index(sdf: np.ndarray, number_sample: int) -> np.ndarray:
