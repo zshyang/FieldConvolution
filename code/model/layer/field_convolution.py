@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from data_code.visualize_sdf import load_sdf
+from typing import Union
 
 
 def numpy_tensor(numpy_array: np.ndarray) -> torch.Tensor:
@@ -349,40 +350,50 @@ def square_distance(src, dst):
     return dist
 
 
-def group(index: torch.Tensor, xyz: torch.Tensor, feature: torch.Tensor, neighbor_sample=32):
+def group(
+        index: torch.Tensor, xyz: torch.Tensor, feature: torch.Tensor, edge_length: float, neighbor_sample=32
+) -> (torch.Tensor, torch.Tensor, torch.Tensor):
+    """Group the point cloud and feature given the center index and the length of the edge.
 
+    Args:
+        index: The index of the center points. (B, Nc). c stand for center.
+        xyz: The point cloud. (B, N, 3)
+        feature: The feature associated with each point. (B, N, F)
+        edge_length: The length of the edge of the cube.
+        neighbor_sample: The number of point to be sampled within each center. Noted with Nn.
 
-    new_xyz = index_points(xyz, index)  # (B, Ns, 3)
+    Returns:
+        grouped_xyz_norm: The normalized grouped point cloud. (B, Nc, Nn, 3)
+        grouped_feature: The grouped feature. (B, Bc, Nn, F)
+        new_xyz: The new position of the point cloud. (B, Nc, 3)
+    """
+
+    assert len(index.shape) == 2, "The index dimension is should be 2 not {}!".format(len(index.shape))
+    assert len(xyz.shape) == 3, "The input point cloud dimension should be 3 not {}!".format(len(xyz.shape))
+    assert len(feature.shape) == 3, "The input feature dimension should be 3 not {}!".format(len(feature.shape))
+    assert index.shape[0] == xyz.shape[0] == feature.shape[0], "The batch size should be same!"
+    assert xyz.shape[2] == 3, "The point cloud should be in 3D space!"
+
+    batch_size, _, number_channel = xyz.shape
+    _, number_center = index.shape
+
+    new_xyz = index_points(xyz, index)  # (B, Nc, 3)
     torch.cuda.empty_cache()
 
     index = query_cube_point(
-        edge=0.03, neighbor_sample_number=neighbor_sample,
+        edge=edge_length, neighbor_sample_number=neighbor_sample,
         points=xyz, center_points=new_xyz
-    )
+    )  # (B, Nc, Nn)
     torch.cuda.empty_cache()
 
-    grouped_xyz = index_points(xyz, index)  # (B, Ns, Nn, 3)
+    grouped_xyz = index_points(xyz, index)  # (B, Nc, Nn, 3)
+    grouped_feature = index_points(feature, index)  # (B, Nc, Nn, F)
     torch.cuda.empty_cache()
 
-    grouped_xyz_normal = grouped_xyz - new_xyz.view()
-
-
-
-
-
-    grouped_xyz_norm = grouped_xyz - new_xyz.view(B, S, 1, C)
+    grouped_xyz_norm = grouped_xyz - new_xyz.view(batch_size, number_center, 1, number_channel)
     torch.cuda.empty_cache()
 
-    if points is not None:
-        grouped_points = index_points(points, idx)
-        new_points = torch.cat([grouped_xyz_norm, grouped_points], dim=-1)  # [B, npoint, nsample, C+D]
-    else:
-        new_points = grouped_xyz_norm
-    if returnfps:
-        return new_xyz, new_points, grouped_xyz, fps_idx
-    else:
-        return new_xyz, new_points
-    pass
+    return grouped_xyz_norm, grouped_feature, new_xyz
 
 
 class FieldConv(nn.Module):
@@ -436,7 +447,7 @@ class FieldConv(nn.Module):
         indices = torch.squeeze(indices, -1)
 
         # Group the points around the convolution center given the distance to the center.
-        group(indices, points)
+        group(indices, points, sdfs, self.edge_length, self.filter_sample_number)
 
         return True
 
