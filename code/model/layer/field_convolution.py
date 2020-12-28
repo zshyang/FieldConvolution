@@ -22,43 +22,6 @@ def numpy_tensor(numpy_array: np.ndarray) -> torch.Tensor:
     return torch_tensor
 
 
-def get_sdf_threshold(sdf: np.ndarray, target_number: int):
-    """Get the threshold of signed distance given a target number.
-
-    Args:
-        sdf: The signed distance field. (N, 1)
-        target_number: The target number to sample in the signed distance field.
-
-    Returns:
-        threshold: The threshold.
-    """
-
-    # A random initial value. It does not matter.
-    number_fit = 1000000
-
-    if target_number > sdf.shape[0]:
-        raise ValueError("The number of target points should be lower than the points!")
-
-    threshold_high = 0.5
-    threshold_low = 0.0
-
-    threshold = (threshold_high + threshold_low) / 2.0
-
-    while number_fit != target_number:
-        threshold = (threshold_high + threshold_low) / 2.0
-
-        if threshold_high - threshold_low <= 1e-10:
-            break
-
-        number_fit = np.sum(np.logical_and(sdf > -threshold, sdf < threshold))
-        if number_fit > target_number:
-            threshold_high = threshold
-        else:
-            threshold_low = threshold
-
-    return threshold
-
-
 def make_batch(points: [np.ndarray], sdfs: [np.ndarray], number_sample: int) -> {str: torch.Tensor}:
     """Make two list of points and sdfs on to GPU.
 
