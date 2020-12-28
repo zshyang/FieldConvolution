@@ -416,10 +416,13 @@ class FieldConv(nn.Module):
 
         Args:
             inputs: The dictionary of the inputs.
+               points: The input point clouds. (B, N, 3)
+               sdfs: The signed distance fields. (B, N, 1)
 
         Returns:
 
         """
+
 
         # Get the convolution center index. (B, C). C is the number of convolution center.
         index = torch.squeeze(batch["index"], -1)
@@ -471,9 +474,10 @@ def test():
     batch = make_batch([point_0, point_1], [sdf_0, sdf_1], number_sample=16 ** 3)
 
     # Forward the batch.
-    FieldConv
-
-    forward(batch)
+    field_conv = FieldConv(
+        edge_length=0.03, filter_sample_number=64, center_number=16**3, in_channels=1, out_channels=2
+    )
+    field_conv(batch)
 
 
 if __name__ == '__main__':
