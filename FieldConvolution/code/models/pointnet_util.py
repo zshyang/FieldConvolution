@@ -122,7 +122,7 @@ def sample_and_group(npoint, radius, nsample, xyz, points, returnfps=False):
     """
     B, N, C = xyz.shape
     S = npoint
-    fps_idx = farthest_point_sample(xyz, npoint) # [B, npoint, C]
+    fps_idx = farthest_point_sample(xyz, npoint)  # [B, npoint, C]
     torch.cuda.empty_cache()
     new_xyz = index_points(xyz, fps_idx)
     torch.cuda.empty_cache()

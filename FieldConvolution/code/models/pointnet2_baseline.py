@@ -76,7 +76,7 @@ def test():
         "lrf": torch.randn(dim_b, dim_n, 3, 3),
         "label": torch.randn(dim_b),
         "normal": torch.randn(dim_b, dim_n, 3),
-        "xyz": torch.randn(dim_b, dim_n),
+        "xyz": torch.randn(dim_b, 3, dim_n),
     }
 
     options = EasyDict()
