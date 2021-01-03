@@ -32,11 +32,11 @@ def square_distance(src, dst):
     Output:
         dist: per-point square distance, [B, N, M]
     """
-    B, N, _ = src.shape
-    _, M, _ = dst.shape
+    batch_size, number_points_n, _ = src.shape
+    _, number_points_m, _ = dst.shape
     dist = -2 * torch.matmul(src, dst.permute(0, 2, 1))
-    dist += torch.sum(src ** 2, -1).view(B, N, 1)
-    dist += torch.sum(dst ** 2, -1).view(B, 1, M)
+    dist += torch.sum(src ** 2, -1).view(batch_size, number_points_n, 1)
+    dist += torch.sum(dst ** 2, -1).view(batch_size, 1, number_points_m)
     return dist
 
 
