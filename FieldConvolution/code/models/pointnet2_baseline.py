@@ -60,12 +60,15 @@ class Net(nn.Module):
         x = self.drop1(F.relu(self.bn1(self.fc1(x))))
         x = self.drop2(F.relu(self.bn2(self.fc2(x))))
         x = self.fc3(x)
-        x = F.log_softmax(x, -1)
+        # print(x.shape)
+        # x = F.log_softmax(x, -1)
 
         return {"pred_logits": x, }
 
 
 def test():
+    """The test function just for the network shape checking.
+    """
 
     torch.manual_seed(0)
     dim_b = 4
@@ -89,6 +92,7 @@ def test():
     gkcnet = Net(options)
 
     out = gkcnet(batch)
+
     print(out)
 
 
