@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from models.pointnet_util import PointNetSetAbstraction
@@ -61,9 +62,35 @@ class Net(nn.Module):
         x = self.fc3(x)
         x = F.log_softmax(x, -1)
 
-        return {"pred_logits": x,}
+        return {"pred_logits": x, }
 
 
+def test():
+
+    torch.manual_seed(0)
+    dim_b = 4
+    dim_n = 1600
+    batch = {
+        "dist_map": torch.randn(dim_b, dim_n, dim_n),
+        "padded_verts": torch.randn(dim_b, dim_n, 3),
+        "lrf": torch.randn(dim_b, dim_n, 3, 3),
+        "label": torch.randn(dim_b),
+        "normal": torch.randn(dim_b, dim_n, 3),
+        "xyz": torch.randn(dim_b, dim_n),
+    }
+
+    options = EasyDict()
+    options.model = EasyDict()
+
+    # options.model.base_dim = 4
+    # options.model.base_radius = 0.05
+    options.model.out_channel = 2
+
+    gkcnet = Net(options)
+
+    out = gkcnet(batch)
+    print(out)
 
 
-
+if __name__ == '__main__':
+    test()
