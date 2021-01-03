@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
-from data_code.visualize_sdf import load_sdf
+from FieldConvolution.data_code.visualize_sdf import load_sdf
 from torch.nn.parameter import Parameter
 import math
 
