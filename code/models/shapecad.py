@@ -16,7 +16,7 @@ class Net(nn.Module):
     """The vanilla version the network.
     """
     def __init__(self, options: EasyDict):
-        """Initializetion.
+        """Initialization.
 
         Args:
             options: The option.
