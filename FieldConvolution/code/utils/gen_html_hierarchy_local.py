@@ -9,7 +9,8 @@ def tag_tr(k, data, table_title):
 	for d in data:
 		d_type, d_value = data[d]
 		if d_type == 'img':
-			s += '<td><a href="{}"><img src="{}" width="200px" height="200px" /></a></td>'.format(os.path.join('..', d_value), os.path.join('..', d_value))
+			s += '<td><a href="{}"><img src="{}" width="200px" height="200px" /></a></td>'.format(os.path.join('..', d_value), os.path.join(
+                '..', d_value))
 		elif d_type == 'text':
 			s += '<td>{}</td>'.format(d_value)
 		else:
@@ -145,7 +146,7 @@ def func(output_folder, num_per_page, input_main_folder, input_folder_list_comma
                             txt = ''
                             for line in ftxt.readlines():
                                 txt += '<p>' + line.rstrip() + '</p>'
-                            txt += '<p><a href="%s">See More</a></p>' % os.path.join('..', input_folder, str(f)+'.txt')
+                            txt += '<p><a href="%s">See More</a></p>' % os.path.join('..', input_folder, str(f) + '.txt')
                             data[counter] = ('text', txt)
                     else:
                             print('Warning: there is no .jpg/.png/.txt file whose name starts with %s!' % os.path.join(input_main_folder, input_folder, str(f)))

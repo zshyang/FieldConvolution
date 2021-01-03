@@ -132,7 +132,7 @@ def slugify(filename):
     Args:
         filename (str): The path to the yaml file.
     """
-    filename = os.path.relpath(filename, ".")  # The relative path from current folder to the yaml file.
+    filename = os.path.relpath(filename, "")  # The relative path from current folder to the yaml file.
     # Remove "experiments" in filename.
     if filename.startswith("experiments/"):
         filename = filename[len("experiments/"):]

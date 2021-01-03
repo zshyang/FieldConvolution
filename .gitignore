@@ -1,2 +1,4 @@
-/code/model/layer/graph_kernel_conv.py
+/FieldConvolution/code/model/layer/graph_kernel_conv.py
 ./.idea
+/large_scale_exp/
+/debug_exp/
