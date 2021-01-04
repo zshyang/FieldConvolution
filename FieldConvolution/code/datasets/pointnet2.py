@@ -9,7 +9,7 @@ from easydict import EasyDict
 
 
 META_ROOT = os.path.join("../data/", "meta")
-SDF_ROOT = os.path.join("../data/", "mesh")
+SDF_ROOT = os.path.join("../data/", "sdf")
 
 
 def get_sdf_path(name: [str]) -> str:
@@ -24,7 +24,7 @@ def get_sdf_path(name: [str]) -> str:
         The path to the sdf file.
     """
     assert len(name) == 2, "The length of the input name is not correct!"
-    return os.path.join(SDF_ROOT, name[0], "{}.npy".format(name[1]))
+    return os.path.join(SDF_ROOT, name[0], "{}.npz".format(name[1]))
 
 
 def clean_name_list(name_list: list) -> list:
@@ -89,7 +89,34 @@ class PointNetPlusPlus(Dataset):
     def __len__(self):
         return len(self.name_lists["sdf"])
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> dict:
+        """The function to get an item in the dataset.
+
+        Args:
+            index:
+
+        Returns:
+            The dictionary to be returned.
+
+        """
+        # Load the signed distance field.
+        sdf_file_name = self.name_lists["sdf"][index]
+        print(sdf_file_name)
+        sdf = np.load(sdf_file_name)
+        print(sdf)
+        for key in sdf:
+            print(key)
+        sdf_pos = sdf["pos"]
+        print(sdf_pos.shape)
+        sdf_neg = sdf["neg"]
+        point_sdf = np.concatenate((sdf_pos, sdf_neg), axis=0)
+        point = point_sdf[:, :3]
+        sdf = point_sdf[:, 3:]
+
+        # Pick the first 2500 points that are closest to the surface.
+        # Sort the signed distance according to the
+
+
         # mesh
         mesh_name = self.name_lists["mesh"][index]
         dict_args = {"process": False}
