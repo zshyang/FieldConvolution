@@ -86,53 +86,8 @@ class PointNetPlusPlus(Dataset):
             sdf_name_list = [get_sdf_path(name) for name in name_list]
             self.name_lists.update({"sdf": sdf_name_list})
 
-    def get_fps_index_path(self, name: list) -> str:
-        return os.path.join(DIST_ROOT, name[0], name[1], "fps", "{:05d}.npy".format(name[2]))
-
-    def expand_list(self, name_list: list):
-        expanded_name_list = []
-        for name in name_list:
-            for i in range(30):
-                name_id = name + [i]
-                expanded_name_list.append(name_id)
-        return expanded_name_list
-
-    def get_dist_path(self, name: list) -> str:
-        """Get the path of the geodesic distance file.
-
-        Args:
-            name: The stage index of the brain file.
-
-        Returns:
-            The path to the geodesic distance file.
-        """
-        return os.path.join(DIST_ROOT, name[0], name[1], "partial", "{:05d}.npy".format(name[2]))
-
-    def get_surf_path(self, name: list) -> str:
-        """Get the path of the surface file.
-
-        Args:
-            name : The stage index of the brain file.
-
-        Returns:
-            The path to the surface obj file.
-        """
-
-        return os.path.join(SURF_ROOT, name[0], name[1] + ".obj")
-
-    def get_lrf_path(self, name: list) -> str:
-        """Get the path of the local reference frame file.
-
-        Args:
-            name (list): The stage index brain name of the file.
-
-        Returns:
-            The path to the lrf file.
-        """
-        return os.path.join(LRF_ROOT, name[0], name[1], "{:05d}.npy".format(name[2]))
-
     def __len__(self):
-        return len(self.name_lists["mesh"])
+        return len(self.name_lists["sdf"])
 
     def __getitem__(self, index):
         # mesh
