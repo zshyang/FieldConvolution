@@ -11,7 +11,7 @@ META_FLDR = "../data/meta"
 SDF_FLDR = "../data/sdf/"
 
 
-def parse_name(name: str) -> list:
+def parse_name(name: str) -> [str]:
     """Parse the name with structure like, "../data/sdf/NL_neg/007_S_1206_I326626_RHippo_60k.npz"
 
     Args:
@@ -20,6 +20,9 @@ def parse_name(name: str) -> list:
     Returns:
         The output list.
     """
+    stage = name.split("/")[-2]
+    index = name.split("/")[-1][:-4]
+    return [stage, index]
 
 
 def generate_meta(stage: str):
@@ -31,9 +34,12 @@ def generate_meta(stage: str):
 
     name_list = glob(os.path.join(SDF_FLDR, stage, "*.npz"))
 
+    meta_list = []
     with open(os.path.join(META_FLDR, stage + ".json"), "w") as file:
         for name in name_list:
-            print(name)
+            meta_list.append(parse_name(name))
+
+        json.dump(meta_list, file)
 
 
 def main():
