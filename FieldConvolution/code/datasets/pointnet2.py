@@ -123,11 +123,13 @@ class PointNetPlusPlus(Dataset):
         }
 
     @staticmethod
-    def collate(batch: list) -> dict:
+    def collate(batch: [dict]) -> dict:
         """Collate batch together for training.
 
         Args:
-            batch: A list of dict.
+            batch: A list of dict. In each dictionary, There are
+                "label": The label of this item.
+                "point": The point of this item.
 
         Returns:
             The dictionary of collated batch.
@@ -138,52 +140,50 @@ class PointNetPlusPlus(Dataset):
                 "lrf": tensor of local reference frame of shape (N, max(V_n), 3, 3).
                 "label": tensor with shape (N) contains label,
         """
+        # Point.
+        point = torch.stack([torch.from_numpy(item["point"]) for item in batch])
 
-        # # mesh
-        # vert_list = [
-        #     torch.tensor(item["mesh"].vertices, dtype=torch.float32) for item in batch
-        # ]
-        # face_list = [torch.tensor(item["mesh"].faces) for item in batch]
-        # mesh = Meshes(verts=vert_list, faces=face_list)
-        #
-        # # Padded vertices and faces.
-        # padded_verts = mesh.verts_padded()  # padded with 0
-        # padded_faces = mesh.faces_padded()  # padded with -1
-        #
-        # # number of vertices list.
-        # vert_num = torch.stack(
-        #     [torch.tensor(int(item["mesh"].vertices.shape[0])) for item in batch]
-        # )
-        # face_num = torch.stack(
-        #     [torch.tensor(int(item["mesh"].faces.shape[0])) for item in batch]
-        # )
-        # # Get the padded vertices.
-        # valid_list = [np.ones((int(item["mesh"].vertices.shape[0]), 1)) for item in batch]
-        # valid = list_to_padded([torch.from_numpy(item) for item in valid_list], pad_value=0.0)
+        # # lrf
+        # lrf = torch.stack([torch.from_numpy(item["lrf"]).view(-1, 9) for item in batch])
 
-        # lrf
-        lrf = torch.stack([torch.from_numpy(item["lrf"]).view(-1, 9) for item in batch])
-
-        # dist
-        dist = torch.stack([torch.from_numpy(item["dist"]) for item in batch])
-        # dist = list_to_padded([torch.from_numpy(item["dist"]) for item in batch], pad_value=0.0)
+        # # dist
+        # dist = torch.stack([torch.from_numpy(item["dist"]) for item in batch])
+        # # dist = list_to_padded([torch.from_numpy(item["dist"]) for item in batch], pad_value=0.0)
 
         # label
         label = torch.cat([torch.tensor(item["label"]).view(1) for item in batch], dim=0)
 
-        # normal
-        normal = torch.stack([torch.from_numpy(item["normal"]) for item in batch])
-
-        # verts
-        verts = torch.stack([torch.from_numpy(item["verts"]) for item in batch])
+        # # normal
+        # normal = torch.stack([torch.from_numpy(item["normal"]) for item in batch])
+        #
+        # # verts
+        # verts = torch.stack([torch.from_numpy(item["verts"]) for item in batch])
 
         return {
-            "dist_map": dist,
-            "padded_verts": verts,
-            "lrf": lrf,
+            # "dist_map": dist,
+            # "padded_verts": verts,
+            # "lrf": lrf,
             "label": label,
-            "normal": normal,
+            # "normal": normal,
+            "point": point,
         }
+
+
+def visualize_point(points: np.ndarray, scene):
+    """Visualize the signed distance field.
+    Args:
+        points: The locations. (N, 3)
+        scene: The scene to render the point cloud.
+    Returns:
+        scene: The scene to render the point cloud.
+    """
+    import pyrender
+
+    cloud = pyrender.Mesh.from_points(points)
+
+    scene.add(cloud)
+
+    return scene
 
 
 def test():
@@ -202,7 +202,7 @@ def test():
 
     for key in dt[3]:
         value = dt[3][key]
-        if key != "mesh" and key != "label":
+        if key != "label":
             print(key, dt[3][key].shape)
         else:
             print(key, value)
@@ -219,7 +219,7 @@ def test_1():
     dataset.train_fn = "AD_pos_NL_neg_train.json"
     options = EasyDict()
 
-    dt = ShapeCad(config=config, dataset=dataset, training=False)
+    dt = PointNetPlusPlus(config=config, dataset=dataset, training=False)
     from torch.utils.data import DataLoader
     train_data_loader = DataLoader(
         dt,
@@ -420,5 +420,26 @@ def test_8():
                 print(i, item, batch[item].shape, batch[item].max())
 
 
+def test_9():
+    """Test the sampling is good or not.
+    """
+    import pyrender
+    print("In test 9, ")
+
+    config = None
+    dataset = EasyDict()
+    dataset.label = ["AD_pos", "NL_neg"]
+    dataset.test_fn = "AD_pos_NL_neg_test.json"
+    dataset.train_fn = "AD_pos_NL_neg_train.json"
+
+    dt = PointNetPlusPlus(config=config, dataset=dataset, training=True)
+    print(len(dt))
+
+    point = dt[3]["point"]
+    scene = pyrender.Scene()
+    visualize_point(point, scene)
+    viewer = pyrender.Viewer(scene, use_raymond_lighting=True, point_size=2)
+
+
 if __name__ == '__main__':
-    test()
+    test_9()
