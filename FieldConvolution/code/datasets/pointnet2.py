@@ -200,7 +200,7 @@ class PointNetPlusPlus(Dataset):
 
 
 def test():
-    """Test the get item function.
+    """Test __getitem__ function.
     """
     print("In test, ")
 
