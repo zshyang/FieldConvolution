@@ -101,65 +101,25 @@ class PointNetPlusPlus(Dataset):
         """
         # Load the signed distance field.
         sdf_file_name = self.name_lists["sdf"][index]
-        print(sdf_file_name)
         sdf = np.load(sdf_file_name)
-        print(sdf)
-        for key in sdf:
-            print(key)
         sdf_pos = sdf["pos"]
-        print(sdf_pos.shape)
         sdf_neg = sdf["neg"]
         point_sdf = np.concatenate((sdf_pos, sdf_neg), axis=0)
+
         point = point_sdf[:, :3]
         sdf = point_sdf[:, 3:]
 
         # Pick the first 2500 points that are closest to the surface.
-        # Sort the signed distance according to the
-
-
-        # mesh
-        mesh_name = self.name_lists["mesh"][index]
-        dict_args = {"process": False}
-        mesh = trimesh.load(mesh_name, **dict_args)
-        # print(mesh_name)
-
-        # lrf size of N X 3 X 3.
-        lrf_name = self.name_lists["lrf"][index]
-        lrf = np.load(lrf_name)
-        lrf_mask = np.logical_not(np.logical_and(lrf > 0.0, lrf < 1.0))
-        lrf[lrf_mask] = 1.0
-
-        # Geodesic distance. (N, N)
-        dist_name = self.name_lists["dist"][index]
-        # print(dist_name)
-        dist = np.load(dist_name)
-        dist = process_inf_dist(dist)
+        # Sort the signed distance according to the absolute value.
+        sort_index = np.argsort(np.abs(sdf), axis=0)
+        picked_point = point[sort_index[:2500, 0]]  # 2500 is hard coded here.
 
         # label
-        label = mesh_name.split("/")[-2]
+        label = sdf_file_name.split("/")[-2]
         label = self.label_dict[label]
 
-        # Load fps index.
-        fps_index_fn = self.name_lists["fps_index"][index]
-        fps_index = np.load(fps_index_fn)
-
-        # normal. (N, 3)
-        normal = np.array(mesh.vertex_normals, dtype=np.float32)
-        normal = normal[fps_index]
-        normal_mask = np.logical_and(normal > 0.0, normal < 1.0)
-        normal_mask = np.logical_not(normal_mask)
-        normal[normal_mask] = 1.0
-
-        # Vertices. (N, 3)
-        verts = np.array(mesh.vertices, dtype=np.float32)
-        verts = verts[fps_index]
-
         return {
-            "dist": dist,
-            "verts": verts,
-            "lrf": lrf,
-            "label": label,
-            "normal": normal,
+            "label": label, "point": picked_point,
         }
 
     @staticmethod
