@@ -72,53 +72,19 @@ class PointNetPlusPlus(Dataset):
             json_file_path = os.path.join(META_ROOT, dataset.train_fn)
             with open(json_file_path, "r") as file:
                 name_list = json.load(file)
-            name_list = self.expand_list(name_list)
-            print(len(name_list))
-            name_list = clean_name_list(name_list)
-            print(len(name_list))
-            # print()
 
             # sdf file list.
-            sdf_name_list = []
-
-            # mesh file list.
-            mesh_name_list = [self.get_surf_path(name) for name in name_list]
-            self.name_lists.update({"mesh": mesh_name_list})
-
-            # lrf file list.
-            lrf_name_list = [self.get_lrf_path(name) for name in name_list]
-            self.name_lists.update({"lrf": lrf_name_list})
-
-            # Geodesic distance file list.
-            dist_name_list = [self.get_dist_path(name) for name in name_list]
-            self.name_lists.update({"dist": dist_name_list})
-
-            # fps index on mesh list.
-            fps_index_list = [self.get_fps_index_path(name) for name in name_list]
-            self.name_lists.update({"fps_index": fps_index_list})
+            sdf_name_list = [get_sdf_path(name) for name in name_list]
+            self.name_lists.update({"sdf": sdf_name_list})
 
         else:
             json_file_path = os.path.join(META_ROOT, dataset.test_fn)
             with open(json_file_path, "r") as file:
                 name_list = json.load(file)
-            name_list = self.expand_list(name_list)
 
-            # mesh file list.
-            mesh_name_list = [self.get_surf_path(name) for name in name_list]
-            self.name_lists.update({"mesh": mesh_name_list})
-
-            # lrf file list.
-            lrf_name_list = [self.get_lrf_path(name) for name in name_list]
-            self.name_lists.update({"lrf": lrf_name_list})
-
-            # Geodesic distance file list.
-            dist_name_list = [self.get_dist_path(name) for name in name_list]
-            self.name_lists.update({"dist": dist_name_list})
-
-            # fps index on mesh list.
-            fps_index_list = [self.get_fps_index_path(name) for name in name_list]
-            self.name_lists.update({"fps_index": fps_index_list})
-
+            # sdf file list.
+            sdf_name_list = [get_sdf_path(name) for name in name_list]
+            self.name_lists.update({"sdf": sdf_name_list})
 
     def get_fps_index_path(self, name: list) -> str:
         return os.path.join(DIST_ROOT, name[0], name[1], "fps", "{:05d}.npy".format(name[2]))
