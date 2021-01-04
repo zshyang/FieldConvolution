@@ -21,10 +21,10 @@ def get_sdf_path(name: [str]) -> str:
             name[1]: The index name.
 
     Returns:
-
+        The path to the sdf file.
     """
     assert len(name) == 2, "The length of the input name is not correct!"
-    return os.path.join(SDF_ROOT, name[0], name[1], "partial", "{:05d}.npy".format(name[2]))
+    return os.path.join(SDF_ROOT, name[0], "{}.npy".format(name[1]))
 
 
 def clean_name_list(name_list: list) -> list:
