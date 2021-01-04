@@ -42,19 +42,46 @@ def generate_meta(stage: str):
         json.dump(meta_list, file)
 
 
+def split_train_test(data_name):
+    with open(os.path.join(META_FLDR, data_name + ".json"), "r") as file:
+        data_list = json.load(file)
+    data_np = np.array(data_list)
+    np.random.shuffle(data_np)
+    if len(data_list) < 1:
+        raise ValueError("The length of the dataset is wrong: {}".format(len(data_list)))
+    split_point = int(0.8 * len(data_list))
+    return data_np[:split_point].tolist(), data_np[split_point:].tolist()
+
+
+def gen_meta(data_first, data_second):
+    train_list_1, test_list_1 = split_train_test(data_first)
+    train_list_2, test_list_2 = split_train_test(data_second)
+
+    train_list_1.extend(train_list_2)
+    test_list_1.extend(test_list_2)
+
+    train_fn = data_first + "_" + data_second + "_" + "train.json"
+    test_fn = data_first + "_" + data_second + "_" + "test.json"
+
+    with open(os.path.join(META_FLDR, train_fn), "w") as file:
+        json.dump(train_list_1, file)
+    print("{} with {} train data is generated.".format(train_fn, len(train_list_1)))
+
+    with open(os.path.join(META_FLDR, test_fn), "w") as file:
+        json.dump(test_list_1, file)
+    print("{} with {} test data is generated.".format(test_fn, len(test_list_1)))
+
+
 def main():
+    """Generate the separate meta file and split them to save.
+    """
+
     stage_list = ["AD_pos", "NL_neg"]
     for stage in stage_list:
         generate_meta(stage)
 
-    # # Get the two dataset name.
-    # parser = argparse.ArgumentParser(description="Data preparation.")
-    # parser.add_argument("--data_first", help="The first dataset name.", type=str, required=True)
-    # parser.add_argument("--data_second", help="The second dataset name.", type=str, required=True)
-    # args = parser.parse_args()
-    #
-    # # Generate the meta information given the dataset name.
-    # gen_meta(args.data_first, args.data_second)
+    # Generate the meta information given the dataset name.
+    gen_meta(stage_list[0], stage_list[1])
 
 
 if __name__ == '__main__':

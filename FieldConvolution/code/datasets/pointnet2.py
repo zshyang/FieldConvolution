@@ -11,6 +11,7 @@ from easydict import EasyDict
 META_ROOT = os.path.join("../data/", "meta")
 SDF_ROOT = os.path.join("../data/", "mesh")
 
+
 def get_sdf_path(name: [str]) -> str:
     """Get the path to the signed distance field file.
 
@@ -22,6 +23,7 @@ def get_sdf_path(name: [str]) -> str:
     Returns:
 
     """
+    assert len(name) == 2, "The length of the input name is not correct!"
     return os.path.join(SDF_ROOT, name[0], name[1], "partial", "{:05d}.npy".format(name[2]))
 
 
