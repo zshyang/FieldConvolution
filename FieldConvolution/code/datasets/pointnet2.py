@@ -133,38 +133,17 @@ class PointNetPlusPlus(Dataset):
 
         Returns:
             The dictionary of collated batch.
-                "padded_verts": tensor of vertices of shape (N, max(V_n), 3).
-                "padded_faces": tensor of faces of shape (N, max(F_n), 3).
-                "vert_num": tensor with shape (N) contains V_n.
-                "face_num": tensor with shape (N) contains F_n.
-                "lrf": tensor of local reference frame of shape (N, max(V_n), 3, 3).
-                "label": tensor with shape (N) contains label,
+                "point": Tensor with shape (B, N, 3).
+                "label": tensor with shape (B) contains label.
         """
         # Point.
         point = torch.stack([torch.from_numpy(item["point"]) for item in batch])
 
-        # # lrf
-        # lrf = torch.stack([torch.from_numpy(item["lrf"]).view(-1, 9) for item in batch])
-
-        # # dist
-        # dist = torch.stack([torch.from_numpy(item["dist"]) for item in batch])
-        # # dist = list_to_padded([torch.from_numpy(item["dist"]) for item in batch], pad_value=0.0)
-
         # label
         label = torch.cat([torch.tensor(item["label"]).view(1) for item in batch], dim=0)
 
-        # # normal
-        # normal = torch.stack([torch.from_numpy(item["normal"]) for item in batch])
-        #
-        # # verts
-        # verts = torch.stack([torch.from_numpy(item["verts"]) for item in batch])
-
         return {
-            # "dist_map": dist,
-            # "padded_verts": verts,
-            # "lrf": lrf,
             "label": label,
-            # "normal": normal,
             "point": point,
         }
 
@@ -233,28 +212,6 @@ def test_1():
         for item in batch:
             print(item, batch[item].shape)
         break
-
-
-def test_2():
-    """Test the distance map is correct.
-    """
-    print("In test 2, ")
-    config = None
-    dataset = EasyDict()
-    dataset.label = ["AD_pos", "NL_neg"]
-    dataset.test_fn = "AD_pos_NL_neg_test.json"
-    dataset.train_fn = "AD_pos_NL_neg_train.json"
-    options = EasyDict()
-
-    dt = ShapeCad(config=config, dataset=dataset, training=True)
-
-    for i in range(len(dt)):
-        for key in dt[i]:
-            if key is "dist":
-                # print(np.sum(dt[i][key]))
-                # if np.isnan(np.sum(dt[i][key])):
-                #     print(i)
-                print(i, np.sum(dt[i][key]))
 
 
 def test_3():
@@ -442,4 +399,4 @@ def test_9():
 
 
 if __name__ == '__main__':
-    test_9()
+    test_1()
