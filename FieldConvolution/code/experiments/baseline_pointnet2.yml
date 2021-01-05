@@ -20,19 +20,19 @@ loss:
 model:
   in_channel: 3
   name:
-    - shapecad  # python file name
+    - pointnet2_baseline  # python file name
     - Net  # python class name
-  out_channel: 1
+  out_channel: 2
 name: shapecad
-num_gpus: 1
+num_gpus: 3
 num_workers: 2
 optim:
   adam_beta1: 0.9
-  lr: 1.0e-1
+  lr: 1.0e-4
   lr_factor: 0.1
   lr_step:
-    - 30
-    - 45
+    - 300
+    - 450
   name: adam
   sgd_momentum: 0.9
   wd: 1.0e-06
@@ -42,15 +42,15 @@ save_dir: ../data/save_ckpt_log_summary
 seed: 4124036635
 summary_dir: summary
 test:
-  batch_size: 2
-  kc_steps: 2
+  batch_size: 16
+  kc_steps: 20000
   shuffle: true
   summary_steps: 1  # How many steps to print the info.
 train:
-  batch_size: 2
-  checkpoint_steps: 10 # How many steps to save the checkpoint.
+  batch_size: 16
+  checkpoint_steps: 1000 # How many steps to save the checkpoint.
   kc_steps: 16
-  num_epochs: 10
+  num_epochs: 1000
   shuffle: true
   summary_steps: 1  # How many steps to save the summary.
   test_epochs: 1  # How many epochs to do one test.

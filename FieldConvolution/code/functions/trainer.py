@@ -31,7 +31,10 @@ class Trainer(CheckpointRunner):
             self.model = shared_model
         else:
             self.model = pick_model(self.options)
-            self.model = torch.nn.DataParallel(self.model, device_ids=self.gpus).cuda()
+            if len(self.gpus) > 1:
+                self.model = torch.nn.DataParallel(self.model, device_ids=self.gpus).cuda()
+            else:
+                self.model = self.model.cuda()
 
         # Setup optimizer for the model.
         if self.options.optim.name == "adam":
@@ -59,6 +62,7 @@ class Trainer(CheckpointRunner):
 
         # Create AverageMeters for losses
         self.losses = AverageMeter()
+        self.acc = AverageMeter()
 
         # Evaluators
         self.evaluators = [Evaluator(self.options, self.logger, self.summary_writer, shared_model=self.model)]
@@ -75,8 +79,11 @@ class Trainer(CheckpointRunner):
     def train_step(self, input_batch: dict):
         """Train one step. This function does not need to be changed in future.
 
-        :param input_batch:
-        :return:
+        Args:
+            input_batch:
+
+        Returns:
+
         """
         # Enable grad.
         self.model.train()
@@ -89,6 +96,7 @@ class Trainer(CheckpointRunner):
 
         # Update AverageMeter.
         self.losses.update(loss.detach().cpu().item())
+        self.acc.update(loss_summary["acc"].cpu().numpy())
 
         # Do back propagation.
         self.optimizer.zero_grad()
@@ -120,9 +128,11 @@ class Trainer(CheckpointRunner):
             for step, batch in enumerate(train_data_loader):
 
                 # Send input to GPU
-                batch = {k: v.cuda() if isinstance(v, (torch.Tensor, Meshes)) else v for k, v in batch.items()}
+                batch = {
+                    k: v.cuda() if isinstance(v, (torch.Tensor, Meshes)) else v for k, v in batch.items()
+                }
 
-                # Run training step
+                # Run training step.
                 out = self.train_step(batch)
 
                 self.step_count += 1
@@ -133,7 +143,7 @@ class Trainer(CheckpointRunner):
 
                 # Kaichun web page visualizer every kc_steps.
                 if self.step_count % self.options.train.kc_steps == 0:
-                    self.logger.info("Visualizing ...")
+                    # self.logger.info("Visualizing ...")
                     self.visualizer(
                         batch, out, training=True, epoch=self.epoch_count,
                         step=self.step_count, options=self.options, logger=self.logger
@@ -142,9 +152,6 @@ class Trainer(CheckpointRunner):
                 # Save checkpoint every checkpoint_steps steps
                 if self.step_count % self.options.train.checkpoint_steps == 0:
                     self.dump_checkpoint()
-
-                # TODO: Remove in the end.
-                break
 
             # Save checkpoint after each epoch.
             self.dump_checkpoint()
@@ -158,21 +165,19 @@ class Trainer(CheckpointRunner):
 
     def train_summaries(self, input_batch, out_summary, loss_summary):
 
-        # # Debug info for filenames
-        # self.logger.debug(input_batch["filename"])
-
         # Save each loss items in Tensorboard.
         for k, v in loss_summary.items():
             self.summary_writer.add_scalar(k, v.mean(), self.step_count)
 
         # Save info to log.
         self.logger.info(
-            "Epoch {:03d}, Step {:06d}/{:06d}, Time elapsed {}, Loss {:12.9f} (average {:12.9f})".format(
+            "Epoch {:03d}, Step {:06d}/{:06d}, Time elapsed {}, Loss {:12.9f} (average {:12.9f}) ACC {:.6f} ".format(
                 self.epoch_count, self.step_count,
                 self.options.train.num_epochs * len(self.dataset) // (
                     self.options.train.batch_size * self.options.num_gpus
                 ), self.time_elapsed,
-                self.losses.val, self.losses.avg
+                self.losses.val, self.losses.avg,
+                self.acc.val,
             )
         )
 

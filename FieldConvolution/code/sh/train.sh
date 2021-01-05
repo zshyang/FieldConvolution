@@ -1,1 +1,1 @@
-CUDA_VISIBLE_DEVICES=2 python train.py --options experiments/hip_cc/hip_cc_br_0008.yml
+CUDA_VISIBLE_DEVICES=0,1,2 python train.py --options experiments/baseline_pointnet2.yml

@@ -1,8 +1,6 @@
 """This file is not needed to be changed anymore.
 ----ZY.2020.Oct
 """
-from datasets.shapenet_unet import ShapeNetUNet
-from models.unet import UNet
 from easydict import EasyDict
 import importlib
 from importlib import import_module
