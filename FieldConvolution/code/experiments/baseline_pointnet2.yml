@@ -1,7 +1,7 @@
 checkpoint_dir: checkpoint
 dataset:
   name:
-    - shapecad  # python file name
+    -   # python file name
     - ShapeCad  # python class name
   label:
     - AD_pos

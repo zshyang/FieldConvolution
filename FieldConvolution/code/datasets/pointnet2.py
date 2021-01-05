@@ -3,7 +3,6 @@ import os
 
 import numpy as np
 import torch
-import trimesh
 from torch.utils.data import Dataset
 from easydict import EasyDict
 
