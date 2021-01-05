@@ -214,85 +214,8 @@ def test_1():
         break
 
 
-def test_3():
-    config = None
-    dataset = EasyDict()
-    dataset.label = ["AD_pos", "NL_neg"]
-    dataset.test_fn = "AD_pos_NL_neg_test.json"
-    dataset.train_fn = "AD_pos_NL_neg_train.json"
-    options = EasyDict()
-
-    dt = ShapeCad(config=config, dataset=dataset, training=True)
-
-    for i in range(len(dt)):
-        print(dt.name_lists["mesh"][i])
-        for key in dt[i]:
-            if key is "dist":
-                # print(np.sum(dt[i][key]))
-                if np.isnan(np.sum(dt[i][key])):
-                    print(i)
-
-
-def test_4():
-    """Fix the issue with inf in distance map.
-    """
-    config = None
-    dataset = EasyDict()
-    dataset.label = ["AD_pos", "NL_neg"]
-    dataset.test_fn = "AD_pos_NL_neg_test.json"
-    dataset.train_fn = "AD_pos_NL_neg_train.json"
-    options = EasyDict()
-
-    dt = ShapeCad(config=config, dataset=dataset, training=True)
-
-    dist = dt[3913]["dist"]
-    print("The initial distance map is: \n", dist)
-    dist_mask = dist > 10**6
-    dist[dist_mask] = 0.0
-    dist_true_max = dist.max()
-    print("The max distance except inf is: \t\t", dist_true_max)
-    dist[dist_mask] = dist_true_max
-    print("The distance map after the precessing: \t", dist.max())
-
-
-def process_inf_dist(dist: np.ndarray):
-    """Replace inf in distance map.
-
-    Args:
-        dist: The initial distance map.
-
-    Returns:
-        dist: The processed distance map.
-    """
-    num_invalid = np.logical_not(np.logical_and(dist > 0, dist < 100))
-    dist_mask = np.logical_or(num_invalid, (np.isnan(dist)))
-    dist[dist_mask] = 0.0
-    dist_true_max = dist.max()
-    dist[dist_mask] = dist_true_max
-    return dist
-
-
-def test_5():
-    """Test the function process_inf_dist.
-    """
-    config = None
-    dataset = EasyDict()
-    dataset.label = ["AD_pos", "NL_neg"]
-    dataset.test_fn = "AD_pos_NL_neg_test.json"
-    dataset.train_fn = "AD_pos_NL_neg_train.json"
-    options = EasyDict()
-
-    dt = ShapeCad(config=config, dataset=dataset, training=True)
-
-    dist = dt[3913]["dist"]
-    print("The initial distance map is: \n", dist)
-    print("The maximum distance map before the precessing: \t", dist.max())
-    dist = process_inf_dist(dist)
-    print("The maximum distance map after the precessing: \t\t", dist.max())
-
-
 def test_6():
-    """Test what is wrong with the data loader.
+    """Go over the data loader.
     """
     print("In test 6, ")
     config = None
@@ -302,7 +225,7 @@ def test_6():
     dataset.train_fn = "AD_pos_NL_neg_train.json"
     options = EasyDict()
 
-    dt = ShapeCad(config=config, dataset=dataset, training=True)
+    dt = PointNetPlusPlus(config=config, dataset=dataset, training=True)
     from torch.utils.data import DataLoader
     import random
     random.seed(4124036635)
@@ -316,65 +239,11 @@ def test_6():
         shuffle=True,
         collate_fn=dt.collate,
     )
-    # print(iter(train_data_loader)[58])
-    # print(train_data_loader[138])
+
     for i, batch in enumerate(train_data_loader):
         print(i)
         for item in batch:
             print(item, batch[item].shape, batch[item].max())
-
-
-def test_7():
-    """Test what is wrong with the data loader.
-    """
-    print("In test 7, ")
-    config = None
-    dataset = EasyDict()
-    dataset.label = ["AD_pos", "NL_neg"]
-    dataset.test_fn = "AD_pos_NL_neg_test.json"
-    dataset.train_fn = "AD_pos_NL_neg_train.json"
-    options = EasyDict()
-
-    dt = ShapeCad(config=config, dataset=dataset, training=True)
-    from torch.utils.data import DataLoader
-    import random
-    random.seed(4124036635)
-    np.random.seed(4124036635)
-    torch.manual_seed(4124036635)
-    train_data_loader = DataLoader(
-        dt,
-        batch_size=128,
-        num_workers=10,
-        pin_memory=True,
-        shuffle=True,
-        collate_fn=dt.collate,
-    )
-    for i, batch in enumerate(dt):
-        print(i)
-        for item in batch:
-            if item != "label":
-                print(item, batch[item].shape)
-
-
-def test_8():
-    """Test what is wrong with the data loader.
-    """
-    print("In test 8, ")
-    config = None
-    dataset = EasyDict()
-    dataset.label = ["AD_pos", "NL_neg"]
-    dataset.test_fn = "AD_pos_NL_neg_test.json"
-    dataset.train_fn = "AD_pos_NL_neg_train.json"
-    options = EasyDict()
-
-    dt = ShapeCad(config=config, dataset=dataset, training=True)
-
-    for i in range(0, len(dt)):
-        batch = dt[i]
-        # print(i)
-        for item in batch:
-            if item == "dist":
-                print(i, item, batch[item].shape, batch[item].max())
 
 
 def test_9():
@@ -399,4 +268,4 @@ def test_9():
 
 
 if __name__ == '__main__':
-    test_1()
+    test_6()
