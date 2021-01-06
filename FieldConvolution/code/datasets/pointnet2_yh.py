@@ -7,8 +7,8 @@ from torch.utils.data import Dataset
 from easydict import EasyDict
 
 
-META_ROOT = os.path.join("../data/", "meta")
-SDF_ROOT = os.path.join("../data/", "sdf")
+ROOT = os.path.join("../data/", "yh")
+ROOT = os.path.join("../data/", "sdf")
 
 
 def get_sdf_path(name: [str]) -> str:
@@ -42,6 +42,73 @@ def clean_name_list(name_list: list) -> list:
             return_name_list.append(return_name)
     return return_name_list
 
+
+class HipoDataLoader(Dataset):
+    def __init__(self, root, npoints=2048, train=True):
+        self.npoints = npoints
+        self.root = root
+        if train:
+            pos = os.path.join(self.root, 'train/pos')
+            neg = os.path.join(self.root, 'train/neg')
+            self.pos_shapes_dir = [os.path.join(pos, f) for f in listdir(pos) if isfile(join(pos, f))]
+            self.neg_shapes_dir = [os.path.join(neg, f) for f in listdir(neg) if isfile(join(neg, f))]
+        else:
+            pos = os.path.join(self.root, 'test/pos')
+            neg = os.path.join(self.root, 'test/neg')
+            self.pos_shapes_dir = [os.path.join(pos, f) for f in listdir(pos) if isfile(join(pos, f))]
+            self.neg_shapes_dir = [os.path.join(neg, f) for f in listdir(neg) if isfile(join(neg, f))]
+        self.datapath = np.concatenate((self.pos_shapes_dir, self.neg_shapes_dir), axis=0)
+        label1 = np.zeros(len(self.pos_shapes_dir))
+        label2 = np.ones(len(self.neg_shapes_dir))
+        self.label = np.concatenate((label1, label2), axis=0)
+    def __len__(self):
+        return len(self.datapath)
+    def _get_item(self, index):
+        fn = self.datapath[index]
+        cls = self.label[index]
+        point_set = np.loadtxt(fn).astype(np.float32)
+        point_set = point_set[:, 0:3]
+        point_set = farthest_point_sample(point_set, self.npoints)
+        point_set[:, 0:3] = pc_normalize(point_set[:, 0:3])
+        return point_set, cls
+    def __getitem__(self, index):
+        return self._get_item(index)
+
+
+class PointNetPlusPlus(Dataset):
+    """Dataset for mesh classification for PointNet++ for data processed by Yonghui Fan.
+    """
+    def __init__(self, config, dataset: EasyDict, training: bool):
+        """Initialize the class.
+
+        Args:
+            config (module)
+            dataset (easydict.EasyDict)
+            training (bool)
+        """
+        self.config = config
+        self.dataset = dataset
+        self.npoints = 2038
+        if training:
+            pos = os.path.join(ROOT, 'train/pos')
+            neg = os.path.join(ROOT, 'train/neg')
+
+            self.pos_shapes_dir = [
+                os.path.join(pos, f) for f in os.listdir(pos) if os.path.isfile(os.path.join(pos, f))
+            ]
+            self.neg_shapes_dir = [
+                os.path.join(neg, f) for f in os.listdir(neg) if os.path.isfile(os.path.join(neg, f))
+            ]
+        else:
+            pos = os.path.join(ROOT, 'test/pos')
+            neg = os.path.join(ROOT, 'test/neg')
+
+            self.pos_shapes_dir = [
+                os.path.join(pos, f) for f in os.listdir(pos) if os.path.isfile(os.path.join(pos, f))
+            ]
+            self.neg_shapes_dir = [
+                os.path.join(neg, f) for f in os.listdir(neg) if os.path.isfile(os.path.join(neg, f))
+            ]
 
 class PointNetPlusPlus(Dataset):
     """Dataset for mesh classification for PointNet++.
