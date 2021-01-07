@@ -12,3 +12,6 @@ And the sampling looks okay.
 
 The dataset function for ModelNet 10 classification problem.
 
+## pointnet
+
+![](../../image/yh_fps.png)
