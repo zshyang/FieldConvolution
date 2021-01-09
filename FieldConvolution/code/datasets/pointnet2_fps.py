@@ -298,4 +298,4 @@ def test_9():
 
 
 if __name__ == '__main__':
-    test()
+    test_9()
