@@ -210,7 +210,7 @@ def test_1():
     )
     for batch in train_data_loader:
         for item in batch:
-            print(item, batch[item].shape)
+            print(item, batch[item])
         break
 
 
@@ -268,4 +268,4 @@ def test_9():
 
 
 if __name__ == '__main__':
-    test_6()
+    test_1()
