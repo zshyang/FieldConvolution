@@ -20,22 +20,20 @@ class Net(nn.Module):
         """
         super(Net, self).__init__()
 
-        # Forward the batch.
-        field_conv = FieldConv(
-            edge_length=0.03, filter_sample_number=64, center_number=16 ** 3, in_channels=1, out_channels=2,
-            feature_is_sdf=False
-        ).cuda()
+        self.in_channel = 16  # Hard coded here.
 
-        feature = field_conv(torch.cat([batch["points"], batch["sdfs"]], -1))
-        print(feature.shape)
+        # The first field convolution layer.
+        self.field_conv = FieldConv(
+            edge_length=0.03, filter_sample_number=64, center_number=16 ** 3, in_channels=1,
+            out_channels=self.in_channel,
+            feature_is_sdf=False
+        )
 
         self.num_class = options.model.out_channel
 
-        self.in_channel = 3  # Hard coded here.
-
         self.sa1 = PointNetSetAbstraction(
-            npoint=512, radius=0.2, nsample=32, in_channel=self.in_channel, mlp=[64, 64, 128], group_all=False
-        )
+            npoint=512, radius=0.2, nsample=32, in_channel=self.in_channel+3, mlp=[64, 64, 128], group_all=False
+        )  # The in channels are increased by 3.
         self.sa2 = PointNetSetAbstraction(
             npoint=128, radius=0.4, nsample=64, in_channel=128 + 3, mlp=[128, 128, 256], group_all=False
         )
@@ -56,7 +54,7 @@ class Net(nn.Module):
 
         Args:
             batch: The input batch.
-                "xyz": The input point cloud.
+                "xyz_sdf": The input point cloud concatenated with signed distance field.
 
         Returns:
             The output batch.
