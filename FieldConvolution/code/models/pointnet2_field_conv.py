@@ -26,7 +26,7 @@ class Net(nn.Module):
         self.field_conv = FieldConv(
             edge_length=0.03, filter_sample_number=64, center_number=16 ** 3, in_channels=1,
             out_channels=self.in_channel,
-            feature_is_sdf=False
+            feature_is_sdf=True,
         )
 
         self.num_class = options.model.out_channel
@@ -59,12 +59,14 @@ class Net(nn.Module):
         Returns:
             The output batch.
         """
-        xyz = batch["xyz"]
+        xyz_sdf = batch["xyz_sdf"]
 
-        batch_size, _, _ = xyz.shape
-        norm = None
+        batch_size, _, _ = xyz_sdf.shape
 
-        l1_xyz, l1_points = self.sa1(xyz, norm)
+        field_feature = self.field_conv(xyz_sdf)
+        field_feature = field_feature.permute(0, 2, 1)
+
+        l1_xyz, l1_points = self.sa1(field_feature[:, :3, :], field_feature[:, 3:, :])
         l2_xyz, l2_points = self.sa2(l1_xyz, l1_points)
         l3_xyz, l3_points = self.sa3(l2_xyz, l2_points)
 
@@ -90,6 +92,7 @@ def test():
         "label": torch.randn(dim_b),
         "normal": torch.randn(dim_b, dim_n, 3),
         "xyz": torch.randn(dim_b, 3, dim_n),
+        "xyz_sdf": torch.randn(dim_b, dim_n, 4)
     }
 
     options = EasyDict()
