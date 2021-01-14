@@ -1,5 +1,4 @@
-"""This dataloader is based on pointnet2.py. And instead of using random sampling on the surface, this one will use
-furthers point sampling on the surface.
+"""This dataloader is to generate the data for sdf as input.
 ----Zhangsihao Yang, Jan 8, 2021
 """
 import json
@@ -25,7 +24,7 @@ def farthest_point_sample(point, npoint):
         centroids: sampled point cloud index, [npoint, D]
     """
     N, D = point.shape
-    xyz = point[:,:3]
+    xyz = point[:, :3]
     centroids = np.zeros((npoint,))
     distance = np.ones((N,)) * 1e10
     farthest = np.random.randint(0, N)
@@ -133,12 +132,6 @@ class PointNetPlusPlus(Dataset):
         sdf_pos = sdf["pos"]
         sdf_neg = sdf["neg"]
         point_sdf = np.concatenate((sdf_pos, sdf_neg), axis=0)
-
-        point = point_sdf[:, :3]
-        sdf = point_sdf[:, 3:]
-
-        # Pick the points that close enough to the surface.
-        surface_point = point[(np.abs(sdf) < 1e-3)[:, 0]]
 
         # Use FPS to pick 2500 points from the surface.
         picked_point = farthest_point_sample(surface_point, 2500)
