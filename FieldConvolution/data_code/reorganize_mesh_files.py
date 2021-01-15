@@ -29,6 +29,5 @@ def reorganize_mesh_files():
         break
 
 
-
 if __name__ == '__main__':
     reorganize_mesh_files()
