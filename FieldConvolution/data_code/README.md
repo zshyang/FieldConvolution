@@ -17,7 +17,16 @@ The obj file should have the following format.
 
 /home/exx/georgey/dataset/hippocampus/obj/AD_pos/002_S_0729_I291876_LHippo_60k.obj
 
-The new dataset should have the following format.
+The new dataset should have the following format:
 hippocampus/obj/AD_pos/002_S_0729_I291876/LHippo_60k.obj
 
+- hippocampus --> dataset
+
+- obj --> sub dataset
+
+- AD_pos --> stage
+
+- 002_S_0729_I291876 --> identity
+
+- LHippo_60k.obj  --> specific file name
 
