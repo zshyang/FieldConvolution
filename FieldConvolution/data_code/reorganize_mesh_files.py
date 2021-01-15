@@ -1,5 +1,6 @@
 import os
 import shutil
+import trimesh
 from glob import glob
 from tqdm import tqdm
 from parse import parse
@@ -94,6 +95,21 @@ def convert_all_m_file_obj_file():
             m2obj(m_file_name, target_obj_file_name)
 
 
+def check_all_obj_file_good():
+    """Check all the obj file could be load by trimesh.
+    """
+
+    obj_file_names = glob(
+        os.path.join(
+            dataset_path, dataset, sub_dataset, "*", "*", "*.obj"
+        )
+    )
+    for obj_file_name in tqdm(obj_file_names):
+        dict_args = {"process": False}
+        _ = trimesh.load(obj_file_name, **dict_args)
+
+
 if __name__ == '__main__':
     reorganize_mesh_files()
     convert_all_m_file_obj_file()
+    check_all_obj_file_good()
