@@ -142,9 +142,7 @@ def merge_all_left_right():
         )
         whole_mesh.show()
 
-
-
-
+        
 if __name__ == '__main__':
     check = False
     reorganize_mesh_files()
