@@ -115,10 +115,15 @@ def merge_all_left_right():
             dataset_path, dataset, sub_dataset, "*", "*"
         )
     )
-    print(all_folders)
+    print(len(all_folders))
+    for mesh_folder in all_folders:
+        print(mesh_folder)
 
 
 if __name__ == '__main__':
+    check = False
     reorganize_mesh_files()
     convert_all_m_file_obj_file()
-    check_all_obj_file_good()
+    if check:
+        check_all_obj_file_good()
+    merge_all_left_right()
