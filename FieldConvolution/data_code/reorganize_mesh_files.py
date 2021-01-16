@@ -4,6 +4,7 @@ import trimesh
 from glob import glob
 from tqdm import tqdm
 from parse import parse
+import numpy as np
 
 
 dataset_path = os.path.join("/home/exx/georgey/dataset")
@@ -11,6 +12,7 @@ dataset = "hippocampus"
 sub_dataset = "obj"
 left_mesh_name = "LHippo_60k.obj"
 right_mesh_name = "RHippo_60k.obj"
+whole_mesh_name = ""
 
 
 def m2obj(m_file, obj_file):
@@ -120,9 +122,27 @@ def merge_all_left_right():
     for mesh_folder in all_folders:
         dict_args = {"process": False}
         left_mesh = trimesh.load(
-            os.path.join(mesh_folder, )
+            os.path.join(mesh_folder, left_mesh_name), **dict_args
         )
-        print(mesh_folder)
+        right_mesh = trimesh.load(
+            os.path.join(mesh_folder, right_mesh_name), **dict_args
+        )
+        left_vertices = np.array(left_mesh.vertices, dtype=np.float)
+        left_faces = np.array(left_mesh.faces, dtype=np.int)
+        right_vertices = np.array(right_mesh.vertices, dtype=np.float)
+        right_faces = np.array(right_mesh.faces, dtype=np.int)
+
+        vertices = np.concatenate((left_vertices, right_vertices), axis=0)
+        faces = np.concatenate(
+            (left_faces, right_faces + left_vertices.shape[0]), axis=0
+        )
+
+        whole_mesh = trimesh.Trimesh(
+            vertices=vertices, faces=faces, process=False
+        )
+        whole_mesh.show()
+
+
 
 
 if __name__ == '__main__':
