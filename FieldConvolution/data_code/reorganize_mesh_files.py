@@ -9,6 +9,8 @@ from parse import parse
 dataset_path = os.path.join("/home/exx/georgey/dataset")
 dataset = "hippocampus"
 sub_dataset = "obj"
+left_mesh_name = "LHippo_60k.obj"
+right_mesh_name = "RHippo_60k.obj"
 
 
 def m2obj(m_file, obj_file):
