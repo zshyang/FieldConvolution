@@ -109,6 +109,15 @@ def check_all_obj_file_good():
         _ = trimesh.load(obj_file_name, **dict_args)
 
 
+def merge_all_left_right():
+    all_folders = glob(
+        os.path.join(
+            dataset_path, dataset, sub_dataset, "*", "*"
+        )
+    )
+    print(all_folders)
+
+
 if __name__ == '__main__':
     reorganize_mesh_files()
     convert_all_m_file_obj_file()
