@@ -115,8 +115,11 @@ def merge_all_left_right():
             dataset_path, dataset, sub_dataset, "*", "*"
         )
     )
-    print(len(all_folders))
     for mesh_folder in all_folders:
+        dict_args = {"process": False}
+        left_mesh = trimesh.load(
+            os.path.join(mesh_folder, )
+        )
         print(mesh_folder)
 
 
