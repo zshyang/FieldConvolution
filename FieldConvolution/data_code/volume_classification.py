@@ -1,9 +1,19 @@
 import os
 import json
 import trimesh
+import numpy as np
+from tqdm import tqdm
+from matplotlib import pyplot as plt
+from sklearn.neighbors import (
+    NeighborhoodComponentsAnalysis, KNeighborsClassifier
+)
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
 
 
 META_ROOT = "../data/meta"
+fold_folder = "10_fold"
 train_fn = "AD_pos_NL_neg_train.json"
 MESH_ROOT = "/home/exx/georgey/dataset/hippocampus/obj/"
 
@@ -59,7 +69,121 @@ def load_train_json():
     print(mesh.volume)
 
 
+def compute_volume():
+    with open(os.path.join(META_ROOT, fold_folder, "000.json"), "r") as file:
+        split_list = json.load(file)
+    for stage in split_list:
+        for tvt in split_list[stage]:
+            for identity in tqdm(split_list[stage][tvt]):
+                left_mesh_name = os.path.join(
+                    MESH_ROOT, stage, identity, "LHippo_60k.obj"
+                )
+                right_mesh_name = os.path.join(
+                    MESH_ROOT, stage, identity, "RHippo_60k.obj"
+                )
+                dict_args = {"process": False}
+                left_mesh = trimesh.load(left_mesh_name, **dict_args)
+                right_mesh = trimesh.load(right_mesh_name, **dict_args)
+
+                volume_path = os.path.join(
+                    "../data", "volume", stage, identity, "volume.npy"
+                )
+                os.makedirs(os.path.dirname(volume_path), exist_ok=True)
+                volumes = np.array([left_mesh.volume, right_mesh.volume], dtype=np.float)
+
+                np.save(volume_path, volumes)
+
+
+def plot_volume():
+    with open(os.path.join(META_ROOT, fold_folder, "000.json"), "r") as file:
+        split_list = json.load(file)
+    volume_dict = dict()
+    stage_list = list()
+    for stage in split_list:
+        stage_list.append(stage)
+        volume_dict[stage] = dict()
+        for tvt in split_list[stage]:
+            volume_list = []
+            for identity in split_list[stage][tvt]:
+
+                volume_path = os.path.join(
+                    "../data", "volume", stage, identity, "volume.npy"
+                )
+                volumes = np.load(volume_path)
+
+                volume_list.append(volumes)
+            volume_array = np.stack(volume_list, axis=0)
+            volume_dict[stage][tvt] = volume_array
+
+    f, ax = plt.subplots(figsize=(7, 7))
+    desired_stage = ["AD_pos", "NL_neg"]
+    for stage in stage_list:
+        if stage in desired_stage:
+            volume = volume_dict[stage]["train"]
+            ax.scatter(volume[:, 0], volume[:, 1])
+    plt.legend(desired_stage)
+    plt.show()
+
+
+def volume_knn_classification(fold: int):
+    """Use 1.6.7. Neighborhood Components Analysis in sklearn to do classification.
+    https://scikit-learn.org/stable/modules/neighbors.html
+
+    Args:
+        fold: The fold number to train and test.
+
+    Returns:
+
+    """
+    with open(os.path.join(META_ROOT, fold_folder, "{:03d}.json".format(fold)), "r") as file:
+        split_list = json.load(file)
+    volume_dict = dict()
+    stage_list = list()
+    for stage in split_list:
+        stage_list.append(stage)
+        volume_dict[stage] = dict()
+        for tvt in split_list[stage]:
+            volume_list = []
+            for identity in split_list[stage][tvt]:
+
+                volume_path = os.path.join(
+                    "../data", "volume", stage, identity, "volume.npy"
+                )
+                volumes = np.load(volume_path)
+
+                volume_list.append(volumes)
+            volume_array = np.stack(volume_list, axis=0)
+            volume_dict[stage][tvt] = volume_array
+
+    volume_train, volume_test, y_train, y_test = [], [], [], []
+    desired_stage = ["AD_pos", "NL_neg"]
+    for i, stage in enumerate(volume_dict):
+        if stage in desired_stage:
+            volume = np.concatenate([volume_dict[stage]["train"], volume_dict[stage]["val"]], axis=0)
+            volume_train.append(volume)
+            y_train.extend([i for _ in range(volume.shape[0])])
+            volume = volume_dict[stage]["test"]
+            volume_test.append(volume)
+            y_test.extend([i for _ in range(volume.shape[0])])
+
+    volume_train = np.concatenate(volume_train, axis=0)
+    volume_test = np.concatenate(volume_test, axis=0)
+    y_train = np.array(y_train)
+    y_test = np.array(y_test)
+
+    nca = NeighborhoodComponentsAnalysis(random_state=42)
+    knn = KNeighborsClassifier(n_neighbors=5)
+
+    nca_pipe = Pipeline([('nca', nca), ('knn', knn)])
+    nca_pipe.fit(volume_train, y_train)
+
+    print(nca_pipe.score(volume_test, y_test))
+
+
 if __name__ == '__main__':
 
-    load_train_json()
-    compute_volume()
+    # load_train_json()
+    # compute_volume()
+    # plot_volume()
+    for i in range(10):
+        volume_knn_classification(i)

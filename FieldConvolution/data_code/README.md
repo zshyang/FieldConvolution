@@ -30,3 +30,9 @@ hippocampus/obj/AD_pos/002_S_0729_I291876/LHippo_60k.obj
 
 - LHippo_60k.obj  --> specific file name
 
+## volume_classification.py
+
+By running function `volume_knn_classification`, the accuracy is printed. 
+
+
+
