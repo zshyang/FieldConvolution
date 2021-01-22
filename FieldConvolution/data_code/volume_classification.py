@@ -125,7 +125,7 @@ def plot_volume():
     plt.show()
 
 
-def volume_knn_classification(fold: int):
+def volume_knn_classification(fold: int, desired_stage: [str]):
     """Use 1.6.7. Neighborhood Components Analysis in sklearn to do classification.
     https://scikit-learn.org/stable/modules/neighbors.html
 
@@ -180,10 +180,15 @@ def volume_knn_classification(fold: int):
     print(nca_pipe.score(volume_test, y_test))
 
 
+def get_knn_acc():
+    desired_stage = ["AD_pos", "NL_neg"]
+    for i in range(10):
+        volume_knn_classification(i, desired_stage)
+
+
 if __name__ == '__main__':
 
     # load_train_json()
     # compute_volume()
     # plot_volume()
-    for i in range(10):
-        volume_knn_classification(i)
+    get_knn_acc()
