@@ -8,51 +8,52 @@ from easydict import EasyDict
 
 
 META_ROOT = os.path.join("../data/", "meta")
-SDF_ROOT = os.path.join("../data/", "sdf")
+left_mesh_name = "LHippo_60k.obj"
+right_mesh_name = "RHippo_60k.obj"
 
 
-def get_sdf_path(name: [str]) -> str:
-    """Get the path to the signed distance field file.
+# def get_sdf_path(name: [str]) -> str:
+#     """Get the path to the signed distance field file.
+#
+#     Args:
+#         name: The list of string information.
+#             name[0]: The stage name.
+#             name[1]: The index name.
+#
+#     Returns:
+#         The path to the sdf file.
+#     """
+#     assert len(name) == 2, "The length of the input name is not correct!"
+#     return os.path.join(SDF_ROOT, name[0], "{}.npz".format(name[1]))
 
-    Args:
-        name: The list of string information.
-            name[0]: The stage name.
-            name[1]: The index name.
 
-    Returns:
-        The path to the sdf file.
-    """
-    assert len(name) == 2, "The length of the input name is not correct!"
-    return os.path.join(SDF_ROOT, name[0], "{}.npz".format(name[1]))
-
-
-def clean_name_list(name_list: list) -> list:
-    """Clean redundant name from the name list.
-
-    Args:
-        name_list: The name list.
-
-    Returns:
-        return_name_list: The cleaned name list.
-    """
-    return_name_list = []
-    for name in name_list:
-        return_name = [name[0], name[1]]
-        if return_name not in return_name_list:
-            return_name_list.append(return_name)
-    return return_name_list
+# def clean_name_list(name_list: list) -> list:
+#     """Clean redundant name from the name list.
+#
+#     Args:
+#         name_list: The name list.
+#
+#     Returns:
+#         return_name_list: The cleaned name list.
+#     """
+#     return_name_list = []
+#     for name in name_list:
+#         return_name = [name[0], name[1]]
+#         if return_name not in return_name_list:
+#             return_name_list.append(return_name)
+#     return return_name_list
 
 
 class PointNetPlusPlus(Dataset):
     """Dataset for mesh classification for PointNet++.
     """
-    def __init__(self, config, dataset: EasyDict, training: bool):
+    def __init__(self, config, dataset: EasyDict, training: str):
         """Initialize the class.
 
         Args:
             config (module)
             dataset (easydict.EasyDict)
-            training (bool)
+            training (str): the stage of the training.
         """
         self.config = config
         self.dataset = dataset
@@ -66,38 +67,54 @@ class PointNetPlusPlus(Dataset):
             label_dict[label] = i
         self.label_dict = label_dict
 
-        # To load training name list or validation name list.
-        if training:
-            json_file_path = os.path.join(META_ROOT, dataset.train_fn)
-            with open(json_file_path, "r") as file:
-                name_list = json.load(file)
+        # load meta list
+        json_file_path = os.path.join(META_ROOT, self.dataset.meta_fn)
+        with open(json_file_path, "r") as file:
+            meta_list = json.load(file)
 
-            # sdf file list.
-            sdf_name_list = [get_sdf_path(name) for name in name_list]
-            self.name_lists.update({"sdf": sdf_name_list})
+        # update the name list
+        name_list = []
+        for label in self.dataset.label:
 
-        else:
-            json_file_path = os.path.join(META_ROOT, dataset.test_fn)
-            with open(json_file_path, "r") as file:
-                name_list = json.load(file)
+            # the stage to be loaded
+            if training == "train":
+                identity_list = meta_list[label]["train"]
+            elif training == "val":
+                identity_list = meta_list[label]["val"]
+            elif training == "test":
+                identity_list = meta_list[label]["test"]
+            else:
+                raise ValueError("This stage {} is not known!".format(training))
 
-            # sdf file list.
-            sdf_name_list = [get_sdf_path(name) for name in name_list]
-            self.name_lists.update({"sdf": sdf_name_list})
+            # concatenate stage label with identity
+            stage_identity_list = [[label, identity] for identity in identity_list]
+            name_list.extend(stage_identity_list)
+        self.name_lists["name_list"] = name_list
+
+        # load the scalar information
 
     def __len__(self):
-        return len(self.name_lists["sdf"])
+        return len(self.name_lists["name_list"])
 
     def __getitem__(self, index: int) -> dict:
         """The function to get an item in the dataset.
 
         Args:
-            index:
+            index: the index of the data set.
 
         Returns:
             The dictionary to be returned.
 
         """
+
+        # find the name of the mesh.
+        print(self.name_lists["name_list"][index])
+
+        # load the mesh
+        # concatenate the vertices
+        # furthest point sampling the vertices
+        # center scale, and randomly rotate the mesh
+
         # Load the signed distance field.
         sdf_file_name = self.name_lists["sdf"][index]
         sdf = np.load(sdf_file_name)
@@ -173,18 +190,27 @@ def test():
     config = None
     dataset = EasyDict()
     dataset.label = ["AD_pos", "NL_neg"]
-    dataset.test_fn = "AD_pos_NL_neg_test.json"
-    dataset.train_fn = "AD_pos_NL_neg_train.json"
+    # dataset.test_fn = "AD_pos_NL_neg_test.json"
+    dataset.meta_fn = "10_fold/000.json"
 
-    dt = PointNetPlusPlus(config=config, dataset=dataset, training=True)
-    print(len(dt))
-
-    for key in dt[3]:
-        value = dt[3][key]
+    print("For training data set: ")
+    train_dt = PointNetPlusPlus(config=config, dataset=dataset, training="train")
+    print(len(train_dt))
+    for key in train_dt[3]:
+        value = train_dt[3][key]
         if key != "label":
-            print(key, dt[3][key].shape)
+            print(key, train_dt[3][key].shape)
         else:
             print(key, value)
+
+    print("For validation data set: ")
+    val_dt = PointNetPlusPlus(config=config, dataset=dataset, training="val")
+
+    print("For test data set: ")
+    test_dt = PointNetPlusPlus(config=config, dataset=dataset, training="test")
+    print(len(train_dt))
+
+
 
 
 def test_1():
@@ -268,4 +294,4 @@ def test_9():
 
 
 if __name__ == '__main__':
-    test_1()
+    test()
