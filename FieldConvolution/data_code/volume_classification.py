@@ -131,9 +131,7 @@ def volume_knn_classification(fold: int, desired_stage: [str]):
 
     Args:
         fold: The fold number to train and test.
-
-    Returns:
-
+        desired_stage: The stages that we want to classify.
     """
     with open(os.path.join(META_ROOT, fold_folder, "{:03d}.json".format(fold)), "r") as file:
         split_list = json.load(file)
@@ -156,7 +154,6 @@ def volume_knn_classification(fold: int, desired_stage: [str]):
             volume_dict[stage][tvt] = volume_array
 
     volume_train, volume_test, y_train, y_test = [], [], [], []
-    desired_stage = ["AD_pos", "NL_neg"]
     for i, stage in enumerate(volume_dict):
         if stage in desired_stage:
             volume = np.concatenate([volume_dict[stage]["train"], volume_dict[stage]["val"]], axis=0)
@@ -177,13 +174,33 @@ def volume_knn_classification(fold: int, desired_stage: [str]):
     nca_pipe = Pipeline([('nca', nca), ('knn', knn)])
     nca_pipe.fit(volume_train, y_train)
 
-    print(nca_pipe.score(volume_test, y_test))
+    return nca_pipe.score(volume_test, y_test)
 
 
 def get_knn_acc():
     desired_stage = ["AD_pos", "NL_neg"]
+    print("For {}, the 10 fold accuracy is: ".format(desired_stage))
+    acc = []
     for i in range(10):
-        volume_knn_classification(i, desired_stage)
+        acc.append(volume_knn_classification(i, desired_stage))
+    acc = np.array(acc)
+    print("Mean is {}".format(acc.mean()), "Std is {}".format(acc.std()))
+
+    desired_stage = ["MCI_pos", "MCI_neg"]
+    print("For {}, the 10 fold accuracy is: ".format(desired_stage))
+    acc = []
+    for i in range(10):
+        acc.append(volume_knn_classification(i, desired_stage))
+    acc = np.array(acc)
+    print("Mean is {}".format(acc.mean()), "Std is {}".format(acc.std()))
+
+    desired_stage = ["NL_pos", "NL_neg"]
+    print("For {}, the 10 fold accuracy is: ".format(desired_stage))
+    acc = []
+    for i in range(10):
+        acc.append(volume_knn_classification(i, desired_stage))
+    acc = np.array(acc)
+    print("Mean is {}".format(acc.mean()), "Std is {}".format(acc.std()))
 
 
 if __name__ == '__main__':
