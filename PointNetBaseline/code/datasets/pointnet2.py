@@ -6,7 +6,7 @@ import torch
 from torch.utils.data import Dataset
 from easydict import EasyDict
 import trimesh
-from utils.
+from utils.fps import farthest_point_sample
 
 
 META_ROOT = os.path.join("../data/", "meta")
@@ -126,6 +126,13 @@ class PointNetPlusPlus(Dataset):
         vertices = np.concatenate((left_vertices, right_vertices), axis=0)
 
         # furthest point sampling the vertices
+        fps_vertices = farthest_point_sample(vertices, npoint=2500)
+
+        import pyrender
+        scene = pyrender.Scene()
+        visualize_point(fps_vertices, scene)
+        viewer = pyrender.Viewer(scene, use_raymond_lighting=True, point_size=2)
+
         # center scale, and randomly rotate the mesh
 
         # Load the signed distance field.
