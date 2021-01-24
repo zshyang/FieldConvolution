@@ -6,6 +6,7 @@ import torch
 from torch.utils.data import Dataset
 from easydict import EasyDict
 import trimesh
+from scipy.spatial.transform import Rotation
 from utils.fps import farthest_point_sample
 
 
@@ -129,43 +130,30 @@ class PointNetPlusPlus(Dataset):
         fps_vertices = farthest_point_sample(vertices, npoint=2500)
 
         # center scale, and randomly rotate the mesh
-        center_vertices = fps_vertices - np.expand_dims(np.mean(fps_vertices, axis=0), 0)  # center
-
-        # a temporary visualization code.
-        import pyrender
-        scene = pyrender.Scene()
-        fps_colors = np.zeros(fps_vertices.shape)
-        fps_colors[:, 2] = 1
-        visualize_point(fps_vertices, scene, fps_colors)
-        visualize_point(center_vertices, scene)
-        dict_args = {"use_raymond_lighting": True, "point_size": 2}
-        viewer = pyrender.Viewer(scene, **dict_args)
-
-        print(center_vertices.shape)
-        dist = np.max(np.sqrt(np.sum(point_set ** 2, axis=1)), 0)
-        point_set = point_set / dist  # scale
-
-        # Load the signed distance field.
-        sdf_file_name = self.name_lists["sdf"][index]
-        sdf = np.load(sdf_file_name)
-        sdf_pos = sdf["pos"]
-        sdf_neg = sdf["neg"]
-        point_sdf = np.concatenate((sdf_pos, sdf_neg), axis=0)
-
-        point = point_sdf[:, :3]
-        sdf = point_sdf[:, 3:]
-
-        # Pick the first 2500 points that are closest to the surface.
-        # Sort the signed distance according to the absolute value.
-        sort_index = np.argsort(np.abs(sdf), axis=0)
-        picked_point = point[sort_index[:2500, 0]]  # 2500 is hard coded here.
+        centered_vertices = fps_vertices - np.expand_dims(np.mean(fps_vertices, axis=0), 0)  # center
+        if self.dataset.scalar is None:
+            dist = np.max(np.sqrt(np.sum(centered_vertices ** 2, axis=1)), 0)
+            scaled_vertices = centered_vertices / dist  # scale
+        else:
+            raise ValueError("This has not been implemented yet!")
+        if self.dataset.data_augmentation:
+            augmented_vertices = np.array(scaled_vertices, dtype=np.float32)
+            alpha = np.random.uniform(0, np.pi * 2)
+            beta = np.random.uniform(0, np.pi * 2)
+            gamma = np.random.uniform(0, np.pi * 2)
+            r = Rotation.from_rotvec([alpha, beta, gamma])
+            rotation_matrix = r.as_matrix()
+            augmented_vertices = augmented_vertices @ rotation_matrix  # random rotation
+            augmented_vertices += np.random.normal(0, 0.02, size=scaled_vertices.shape)  # random jitter
+        else:
+            augmented_vertices = scaled_vertices
 
         # label
-        label = sdf_file_name.split("/")[-2]
+        label = stage_identity[0]
         label = self.label_dict[label]
 
         return {
-            "label": label, "point": picked_point,
+            "label": label, "point": augmented_vertices,
         }
 
     @staticmethod
@@ -227,11 +215,12 @@ def test():
     dataset = EasyDict()
     dataset.label = ["AD_pos", "NL_neg"]
     dataset.meta_fn = "10_fold/000.json"
-    dataset.scale = None
+    dataset.scalar = None
+    dataset.data_augmentation = True
 
     print("For training data set: ")
     train_dt = PointNetPlusPlus(config=config, dataset=dataset, training="train")
-    print(len(train_dt))
+    print("The length of the train data set is {}".format(len(train_dt)))
     for key in train_dt[3]:
         value = train_dt[3][key]
         if key != "label":
@@ -241,12 +230,11 @@ def test():
 
     print("For validation data set: ")
     val_dt = PointNetPlusPlus(config=config, dataset=dataset, training="val")
+    print("The length of the validation data set is {}".format(len(val_dt)))
 
     print("For test data set: ")
     test_dt = PointNetPlusPlus(config=config, dataset=dataset, training="test")
-    print(len(train_dt))
-
-
+    print("The length of the test data set is {}".format(len(test_dt)))
 
 
 def test_1():
@@ -327,6 +315,27 @@ def test_9():
     scene = pyrender.Scene()
     visualize_point(point, scene)
     viewer = pyrender.Viewer(scene, use_raymond_lighting=True, point_size=2)
+
+    # a temporary visualization code.
+    import pyrender
+    scene = pyrender.Scene()
+
+    fps_colors = np.zeros(fps_vertices.shape)
+    fps_colors[:, 2] = 1
+    # visualize_point(fps_vertices, scene, fps_colors)
+
+    # visualize_point(centered_vertices, scene)
+
+    scaled_colors = np.zeros(scaled_vertices.shape)
+    scaled_colors[:, 0] = 1
+    visualize_point(scaled_vertices, scene, scaled_colors)
+
+    augmented_colors = np.zeros(scaled_vertices.shape)
+    augmented_colors[:, 1] = 1
+    visualize_point(augmented_vertices, scene, colors=augmented_colors)
+
+    dict_args = {"use_raymond_lighting": True, "point_size": 2, "show_world_axis": True}
+    viewer = pyrender.Viewer(scene, **dict_args)
 
 
 if __name__ == '__main__':
