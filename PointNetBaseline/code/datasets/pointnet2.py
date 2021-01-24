@@ -5,11 +5,13 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 from easydict import EasyDict
+import trimesh
 
 
 META_ROOT = os.path.join("../data/", "meta")
 left_mesh_name = "LHippo_60k.obj"
 right_mesh_name = "RHippo_60k.obj"
+MESH_ROOT = "/home/exx/georgey/dataset/hippocampus/obj/"
 
 
 # def get_sdf_path(name: [str]) -> str:
@@ -108,9 +110,12 @@ class PointNetPlusPlus(Dataset):
         """
 
         # find the name of the mesh.
-        print(self.name_lists["name_list"][index])
+        stage_identity = self.name_lists["name_list"][index]
+        left_mesh_name_ = os.path.join(MESH_ROOT, stage_identity[0], stage_identity[1], left_mesh_name)
+        right_mesh_name_ = os.path.join(MESH_ROOT, stage_identity[0], stage_identity[1], right_mesh_name)
 
         # load the mesh
+
         # concatenate the vertices
         # furthest point sampling the vertices
         # center scale, and randomly rotate the mesh
