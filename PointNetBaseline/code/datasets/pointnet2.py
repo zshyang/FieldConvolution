@@ -128,12 +128,22 @@ class PointNetPlusPlus(Dataset):
         # furthest point sampling the vertices
         fps_vertices = farthest_point_sample(vertices, npoint=2500)
 
+        # center scale, and randomly rotate the mesh
+        center_vertices = fps_vertices - np.expand_dims(np.mean(fps_vertices, axis=0), 0)  # center
+
+        # a temporary visualization code.
         import pyrender
         scene = pyrender.Scene()
-        visualize_point(fps_vertices, scene)
-        viewer = pyrender.Viewer(scene, use_raymond_lighting=True, point_size=2)
+        fps_colors = np.zeros(fps_vertices.shape)
+        fps_colors[:, 2] = 1
+        visualize_point(fps_vertices, scene, fps_colors)
+        visualize_point(center_vertices, scene)
+        dict_args = {"use_raymond_lighting": True, "point_size": 2}
+        viewer = pyrender.Viewer(scene, **dict_args)
 
-        # center scale, and randomly rotate the mesh
+        print(center_vertices.shape)
+        dist = np.max(np.sqrt(np.sum(point_set ** 2, axis=1)), 0)
+        point_set = point_set / dist  # scale
 
         # Load the signed distance field.
         sdf_file_name = self.name_lists["sdf"][index]
@@ -185,17 +195,23 @@ class PointNetPlusPlus(Dataset):
         }
 
 
-def visualize_point(points: np.ndarray, scene):
+def visualize_point(points: np.ndarray, scene, colors: np.ndarray = None):
     """Visualize the signed distance field.
+
     Args:
         points: The locations. (N, 3)
         scene: The scene to render the point cloud.
+        colors: The color of the vertices
+
     Returns:
         scene: The scene to render the point cloud.
     """
     import pyrender
 
-    cloud = pyrender.Mesh.from_points(points)
+    if colors is None:
+        cloud = pyrender.Mesh.from_points(points)
+    else:
+        cloud = pyrender.Mesh.from_points(points, colors=colors)
 
     scene.add(cloud)
 
@@ -210,8 +226,8 @@ def test():
     config = None
     dataset = EasyDict()
     dataset.label = ["AD_pos", "NL_neg"]
-    # dataset.test_fn = "AD_pos_NL_neg_test.json"
     dataset.meta_fn = "10_fold/000.json"
+    dataset.scale = None
 
     print("For training data set: ")
     train_dt = PointNetPlusPlus(config=config, dataset=dataset, training="train")

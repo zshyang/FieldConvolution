@@ -9,6 +9,7 @@ dataset:
 #  test_fn: AD_pos_NL_neg_test.json
 #  train_fn: AD_pos_NL_neg_train.json
   meta_fn: 10_fold/000.json
+  scale: null
 latest_checkpoint: false  # Once overwrite, useless.
 load_epoch: 5  # Once overwrite, useless.
 load_step: 80  # Once overwrite, useless.
