@@ -240,25 +240,57 @@ def test():
 def test_1():
     """Test the collate function.
     """
+    from torch.utils.data import DataLoader
+
     print("In test 1, ")
     config = None
     dataset = EasyDict()
     dataset.label = ["AD_pos", "NL_neg"]
-    dataset.test_fn = "AD_pos_NL_neg_test.json"
-    dataset.train_fn = "AD_pos_NL_neg_train.json"
-    options = EasyDict()
+    dataset.meta_fn = "10_fold/000.json"
+    dataset.scalar = None
+    dataset.data_augmentation = True
 
-    dt = PointNetPlusPlus(config=config, dataset=dataset, training=False)
-    from torch.utils.data import DataLoader
+    print("For training data set: ")
+    train_dt = PointNetPlusPlus(config=config, dataset=dataset, training="train")
     train_data_loader = DataLoader(
-        dt,
+        train_dt,
         batch_size=4,
         num_workers=10,
         pin_memory=True,
         shuffle=True,
-        collate_fn=dt.collate,
+        collate_fn=train_dt.collate,
     )
     for batch in train_data_loader:
+        for item in batch:
+            print(item, batch[item])
+        break
+
+    print("For validation data set: ")
+    val_dt = PointNetPlusPlus(config=config, dataset=dataset, training="val")
+    data_loader = DataLoader(
+        val_dt,
+        batch_size=4,
+        num_workers=10,
+        pin_memory=True,
+        shuffle=True,
+        collate_fn=val_dt.collate,
+    )
+    for batch in data_loader:
+        for item in batch:
+            print(item, batch[item])
+        break
+
+    print("For test data set: ")
+    test_dt = PointNetPlusPlus(config=config, dataset=dataset, training="test")
+    data_loader = DataLoader(
+        test_dt,
+        batch_size=4,
+        num_workers=10,
+        pin_memory=True,
+        shuffle=True,
+        collate_fn=test_dt.collate,
+    )
+    for batch in data_loader:
         for item in batch:
             print(item, batch[item])
         break
@@ -305,17 +337,21 @@ def test_9():
     config = None
     dataset = EasyDict()
     dataset.label = ["AD_pos", "NL_neg"]
-    dataset.test_fn = "AD_pos_NL_neg_test.json"
-    dataset.train_fn = "AD_pos_NL_neg_train.json"
+    dataset.meta_fn = "10_fold/000.json"
+    dataset.scalar = None
+    dataset.data_augmentation = True
 
-    dt = PointNetPlusPlus(config=config, dataset=dataset, training=True)
+    dt = PointNetPlusPlus(config=config, dataset=dataset, training="train")
     print(len(dt))
 
     point = dt[3]["point"]
     scene = pyrender.Scene()
     visualize_point(point, scene)
-    viewer = pyrender.Viewer(scene, use_raymond_lighting=True, point_size=2)
+    dict_args = {"use_raymond_lighting": True, "point_size": 2, "show_world_axis": True}
+    viewer = pyrender.Viewer(scene, **dict_args)
 
+
+def ref():
     # a temporary visualization code.
     import pyrender
     scene = pyrender.Scene()
@@ -339,4 +375,4 @@ def test_9():
 
 
 if __name__ == '__main__':
-    test()
+    test_9()
