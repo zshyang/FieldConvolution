@@ -14,15 +14,16 @@ from datetime import timedelta
 
 class CheckpointRunner(object):
 
-    def __init__(self, options, logger: Logger, summary_writer: SummaryWriter, training: bool, shared_model=None):
-        """ Do the initialization.
+    def __init__(self, options, logger: Logger, summary_writer: SummaryWriter, training: str, shared_model=None):
+        """Do the initialization.
 
-        :param options:
-        :param logger:
-        :param summary_writer:
-        :param training:
-        :param shared_model: In the case of evaluation or prediction, we do not need create a new model. A shared model
-            could be used to do evaluation.
+        Args:
+            options:
+            logger:
+            summary_writer:
+            training: the stage of the training.
+            shared_model: In the case of evaluation or prediction, we do not need create a new model.
+                A shared model could be used to do evaluation.
         """
 
         self.options = options
@@ -49,10 +50,14 @@ class CheckpointRunner(object):
         # Initialize dataset.
         dataset = options.dataset
         self.dataset = self.load_dataset(dataset, training)
-        if training:  # Update the number of training samples in options.
+        if training == "train":  # Update the number of training samples in options.
             self.options.dataset.len_train = len(self.dataset)
-        else:  # Update the number of validation samples in options.
+        elif training == "val":  # Update the number of validation samples in options.
+            self.options.dataset.len_val = len(self.dataset)
+        elif training == "test":
             self.options.dataset.len_test = len(self.dataset)
+        else:
+            raise ValueError("This stage {} is not known!".format(training))
         self.dataset_collate_fn = self.dataset.collate
 
         # By default, epoch_count = step_count = 0.
@@ -74,12 +79,12 @@ class CheckpointRunner(object):
             )
             self.init_with_checkpoint()
 
-    def load_dataset(self, dataset, training):
+    def load_dataset(self, dataset, training: str):
         """Load the dataset.
 
         Args:
             dataset
-            training (bool)
+            training (str)
         """
         # Logging.
         self.logger.info("Loading datasets: {}".format(dataset.name[0]))

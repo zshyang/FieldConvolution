@@ -50,10 +50,14 @@ class CheckpointRunner(object):
         # Initialize dataset.
         dataset = options.dataset
         self.dataset = self.load_dataset(dataset, training)
-        if training:  # Update the number of training samples in options.
+        if training == "train":  # Update the number of training samples in options.
             self.options.dataset.len_train = len(self.dataset)
-        else:  # Update the number of validation samples in options.
+        elif training == "val":  # Update the number of validation samples in options.
+            self.options.dataset.len_val = len(self.dataset)
+        elif training == "test":
             self.options.dataset.len_test = len(self.dataset)
+        else:
+            raise ValueError("This stage {} is not known!".format(training))
         self.dataset_collate_fn = self.dataset.collate
 
         # By default, epoch_count = step_count = 0.

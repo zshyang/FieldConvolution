@@ -173,6 +173,7 @@ class PointNetPlusPlus(Dataset):
         # Point.
         point = torch.stack([torch.from_numpy(item["point"]) for item in batch])
         point = point.permute(0, 2, 1)
+        point = point.float()
 
         # label
         label = torch.cat([torch.tensor(item["label"]).view(1) for item in batch], dim=0)

@@ -13,7 +13,7 @@ class Evaluator(CheckpointRunner):
     """The evaluator.
     """
     def __init__(self, options, logger: Logger, writer, shared_model=None):
-        super().__init__(options, logger, writer, training=False, shared_model=shared_model)
+        super().__init__(options, logger, writer, training="val", shared_model=shared_model)
 
     # noinspection PyAttributeOutsideInit
     def init_fn(self, shared_model=None, **kwargs):

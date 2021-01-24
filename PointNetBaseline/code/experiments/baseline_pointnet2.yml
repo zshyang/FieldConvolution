@@ -6,10 +6,9 @@ dataset:
   label:
     - AD_pos
     - NL_neg
-#  test_fn: AD_pos_NL_neg_test.json
-#  train_fn: AD_pos_NL_neg_train.json
   meta_fn: 10_fold/000.json
-  scale: null
+  scalar: null
+  data_augmentation: true
 latest_checkpoint: false  # Once overwrite, useless.
 load_epoch: 5  # Once overwrite, useless.
 load_step: 80  # Once overwrite, useless.
@@ -26,15 +25,15 @@ model:
     - Net  # python class name
   out_channel: 2
 name: shapecad
-num_gpus: 3
+num_gpus: 1
 num_workers: 2
 optim:
   adam_beta1: 0.9
   lr: 1.0e-4
   lr_factor: 0.1
   lr_step:
-    - 300
-    - 450
+    - 30
+    - 45
   name: adam
   sgd_momentum: 0.9
   wd: 1.0e-06
@@ -49,10 +48,10 @@ test:
   shuffle: true
   summary_steps: 1  # How many steps to print the info.
 train:
-  batch_size: 16
+  batch_size: 48
   checkpoint_steps: 1000 # How many steps to save the checkpoint.
   kc_steps: 16
-  num_epochs: 1000
+  num_epochs: 100
   shuffle: true
   summary_steps: 1  # How many steps to save the summary.
   test_epochs: 1  # How many epochs to do one test.

@@ -35,7 +35,7 @@ def main():
 
     logger, writer = reset_options(options, args)
 
-    trainer = Trainer(options, logger, writer, training=True)
+    trainer = Trainer(options, logger, writer, training="train")
     trainer.train()
 
 
