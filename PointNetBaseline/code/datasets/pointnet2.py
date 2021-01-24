@@ -6,6 +6,7 @@ import torch
 from torch.utils.data import Dataset
 from easydict import EasyDict
 import trimesh
+from utils.
 
 
 META_ROOT = os.path.join("../data/", "meta")
@@ -115,8 +116,15 @@ class PointNetPlusPlus(Dataset):
         right_mesh_name_ = os.path.join(MESH_ROOT, stage_identity[0], stage_identity[1], right_mesh_name)
 
         # load the mesh
+        dict_args = {"process": False}
+        left_mesh = trimesh.load(left_mesh_name_, **dict_args)
+        right_mesh = trimesh.load(right_mesh_name_, **dict_args)
 
         # concatenate the vertices
+        left_vertices = np.array(left_mesh.vertices, dtype=np.float32)
+        right_vertices = np.array(right_mesh.vertices, dtype=np.float32)
+        vertices = np.concatenate((left_vertices, right_vertices), axis=0)
+
         # furthest point sampling the vertices
         # center scale, and randomly rotate the mesh
 
