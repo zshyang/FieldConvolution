@@ -1,6 +1,7 @@
 import logging
 import os
 from easydict import EasyDict
+import numpy as np
 
 
 def create_logger(cfg, phase="train"):
@@ -24,6 +25,11 @@ def create_logger(cfg, phase="train"):
 
 
 def parse_logger(options: EasyDict):
+    """parse the logger to get the validation epoch with the maximum accuracy.
+
+    Args:
+        options: a global variable.
+    """
     # the phase of the logger file.
     phase = "train"
 
@@ -40,22 +46,30 @@ def parse_logger(options: EasyDict):
     number_step_each_epoch = len(number_step_each_epoch)
 
     # load the logger file.
-    test_acc = []
+    val_acc = []
     with open(final_log_file, "r") as file:
         for line in file:
             if ("Test" in line) and ("acc" in line):
-                test_acc.append(line)
+                val_acc.append(line)
 
     # parse the accuracy
-    test_acc_list = []
-    for acc_line in test_acc:
+    val_acc_list = []
+    for acc_line in val_acc:
         acc = acc_line[-9:-1]
-        test_acc_list.append(float(acc))
+        val_acc_list.append(float(acc))
 
     # optionally plot the accuracy
-    import matplotlib.pyplot as plt
-    plt.plot(test_acc_list)
-    plt.ylabel("the accuracy")
-    plt.show()
+    visualization = False
+    if visualization:
+        import matplotlib.pyplot as plt
+        plt.plot(val_acc_list)
+        plt.ylabel("the accuracy")
+        plt.show()
 
-    pass
+    # get the step, epoch, and the checkpoint file name
+    epoch = np.argmax(np.array(val_acc_list)) + 1
+    step = number_step_each_epoch * epoch
+    checkpoint_file = "{:06d}_{:06d}.pt".format(step, epoch)
+
+    # update the options.
+    options.checkpoint_file = checkpoint_file
