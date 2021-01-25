@@ -27,11 +27,9 @@ def parse_args() -> argparse.Namespace:
 
 
 def main():
+    """main function.
+    """
     args = parse_args()
-    print(type(args))
-    import pprint
-    pp = pprint.PrettyPrinter(indent=4)
-    pp.pprint(options)
 
     logger, writer = reset_options(options, args, phase="test")
 
