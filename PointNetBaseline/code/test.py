@@ -36,9 +36,11 @@ def main():
 
     parse_logger(options)
 
-    import pprint
-    pp = pprint.PrettyPrinter(indent=4)
-    pp.pprint(options)
+    debug = False
+    if debug:
+        import pprint
+        pp = pprint.PrettyPrinter(indent=4)
+        pp.pprint(options)
 
 
 if __name__ == '__main__':
