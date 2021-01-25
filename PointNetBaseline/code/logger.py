@@ -26,6 +26,7 @@ def create_logger(cfg, phase="train"):
 
 def parse_logger(options: EasyDict):
     """parse the logger to get the validation epoch with the maximum accuracy.
+    The path to the checkpoint file is updated.
 
     Args:
         options: a global variable.
