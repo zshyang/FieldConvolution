@@ -182,7 +182,8 @@ def reset_options(input_options, args, phase="train"):
             prefix = slugify(args.options) + "_"
         options.version = prefix + datetime.now().strftime("%m%d%H%M%S")  # ignore %Y
 
-    # Create folders.
+    """Create folders.
+    """
     name_version = options.name + "_" + options.version
     # Log folder.
     options.log_dir = os.path.join(options.save_dir, name_version, options.log_dir)
