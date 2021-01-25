@@ -129,13 +129,15 @@ class PointNetPlusPlus(Dataset):
         # furthest point sampling the vertices
         fps_vertices = farthest_point_sample(vertices, npoint=2500)
 
-        # center scale, and randomly rotate the mesh
+        # center, and scale the mesh
         centered_vertices = fps_vertices - np.expand_dims(np.mean(fps_vertices, axis=0), 0)  # center
         if self.dataset.scalar is None:
             dist = np.max(np.sqrt(np.sum(centered_vertices ** 2, axis=1)), 0)
             scaled_vertices = centered_vertices / dist  # scale
         else:
-            raise ValueError("This has not been implemented yet!")
+            scaled_vertices = centered_vertices / self.dataset.scalar  # scale
+
+        # randomly rotate, and jitter the mesh
         if self.dataset.data_augmentation:
             augmented_vertices = np.array(scaled_vertices, dtype=np.float32)
             alpha = np.random.uniform(0, np.pi * 2)
@@ -297,6 +299,30 @@ def test_1():
         break
 
 
+def test_2():
+    """test with having a scalar added.
+    """
+    print("In test 2, ")
+
+    config = None
+    dataset = EasyDict()
+    dataset.label = ["AD_pos", "NL_neg"]
+    dataset.meta_fn = "10_fold/000.json"
+    dataset.scalar = 38.2
+    dataset.data_augmentation = True
+
+    print("For training data set: ")
+    train_dt = PointNetPlusPlus(config=config, dataset=dataset, training="train")
+    print("The length of the train data set is {}".format(len(train_dt)))
+    data_sand = train_dt[3]
+    for key in data_sand:
+        value = data_sand[key]
+        if key != "label":
+            print(key, data_sand[key].shape)
+        else:
+            print(key, value)
+
+
 def test_6():
     """Go over the data loader.
     """
@@ -376,4 +402,4 @@ def ref():
 
 
 if __name__ == '__main__':
-    test_9()
+    test_2()
