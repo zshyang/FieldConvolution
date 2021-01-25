@@ -1,7 +1,6 @@
-# the yml without data augmentation.
+# the yml with a scale added.
 based_on:
   - baseline_pointnet2.yml
 dataset:
-  data_augmentation: true
   scalar: 38.2
 version: scale
