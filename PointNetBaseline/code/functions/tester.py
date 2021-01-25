@@ -9,11 +9,11 @@ from utils.average_meter import AverageMeter
 from pytorch3d.structures import Meshes
 
 
-class Evaluator(CheckpointRunner):
-    """The evaluator.
+class Tester(CheckpointRunner):
+    """The tester.
     """
     def __init__(self, options, logger: Logger, writer, shared_model=None):
-        super().__init__(options, logger, writer, training="val", shared_model=shared_model)
+        super().__init__(options, logger, writer, training="test", shared_model=shared_model)
 
     # noinspection PyAttributeOutsideInit
     def init_fn(self, shared_model=None, **kwargs):
@@ -56,7 +56,7 @@ class Evaluator(CheckpointRunner):
 
     # noinspection PyAttributeOutsideInit
     def evaluate(self):
-        self.logger.info("Running evaluations...")
+        self.logger.info("Running test ...")
         # clear evaluate_step_count, but keep total step count uncleared.
         self.evaluate_step_count = 0
         # Test data loader.

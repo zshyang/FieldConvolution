@@ -12,7 +12,7 @@ import torch.nn
 
 class CheckpointSaver(object):
     """Class that handles saving and loading checkpoints during training."""
-    def __init__(self, logger: Logger, options: EasyDict, training: bool):
+    def __init__(self, logger: Logger, options: EasyDict, training: str):
         """Initialization function.
         :param logger
         :param options
@@ -22,14 +22,19 @@ class CheckpointSaver(object):
 
         # Checkpoint is given in the options.
         if options.checkpoint_file is not None:
+            local_ckpt_file = os.path.join(options.checkpoint_dir, options.checkpoint_file)
             # Do not exist.
-            if not os.path.exists(options.checkpoint_file):
+            if not os.path.exists(local_ckpt_file):
                 raise ValueError("Checkpoint file [{}] does not exist!".format(options.checkpoint_file))
             # Only accept valid checkpoint file for training.
-            if training and not self.check_end_epoch(options.checkpoint_file):
-                raise ValueError("{} is not at the end of epoch for training".format(options.checkpoint_file))
-            self.save_dir = os.path.dirname(os.path.abspath(options.checkpoint_file))
-            self.checkpoint_file = os.path.abspath(options.checkpoint_file)
+            if training == "train" and not self.check_end_epoch(options.checkpoint_file):
+                raise ValueError(
+                    "{} is not at the end of epoch for training".format(
+                        options.checkpoint_file
+                    )
+                )
+            self.save_dir = os.path.dirname(os.path.abspath(local_ckpt_file))
+            self.checkpoint_file = os.path.abspath(local_ckpt_file)
         else:  # Checkpoint is not given in the options.
             # checkpoint_dir is not provided.
             if options.checkpoint_dir is None:
@@ -37,8 +42,10 @@ class CheckpointSaver(object):
             self.save_dir = os.path.abspath(options.checkpoint_dir)
             if options.latest_checkpoint or options.overwrite:
                 self.checkpoint_file = self.get_latest_checkpoint()
-                if training and self.checkpoint_file is not None:
-                    raise ValueError("It is not recommended to train without know which epoch and step you start with!")
+                if training == "train" and self.checkpoint_file is not None:
+                    raise ValueError(
+                        "It is not recommended to train without know which epoch and step you start with!"
+                    )
             else:  # Not load latest ckpt.
                 self.checkpoint_file = os.path.abspath(
                     os.path.join(self.save_dir, "{:06d}_{:06d}.pt".format(options.load_step, options.load_epoch))
@@ -47,7 +54,7 @@ class CheckpointSaver(object):
                 if not os.path.exists(self.checkpoint_file):
                     raise ValueError("Checkpoint file [{}] does not exist!".format(self.checkpoint_file))
                 # Not end of epoch and training.
-                if training and not self.check_end_epoch(self.checkpoint_file):
+                if training == "train" and not self.check_end_epoch(self.checkpoint_file):
                     raise ValueError("The step should be the end of one epoch")
 
     def check_end_epoch(self, fn: str) -> bool:

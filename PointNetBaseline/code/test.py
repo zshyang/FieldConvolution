@@ -6,6 +6,7 @@ import sys
 
 from options import update_options, options, reset_options
 from logger import parse_logger
+from functions.tester import Tester
 
 
 def parse_args() -> argparse.Namespace:
@@ -35,6 +36,9 @@ def main():
     logger, writer = reset_options(options, args, phase="test")
 
     parse_logger(options)
+
+    tester = Tester(options, logger, writer)
+    tester.evaluate()
 
     debug = False
     if debug:
