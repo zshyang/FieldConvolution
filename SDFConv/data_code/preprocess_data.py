@@ -92,6 +92,17 @@ def append_data_source_map(data_dir, name, source):
 
 def generate_sdf_give_path(path_name):
 
+    # get the path to save the sdf.
+    split_names = path_name.split("/")
+    stage = split_names[-2]
+    identity = split_names[-1]
+    sdf_path = os.path.join("../data", "sdf", stage, identity, "sdf.npy")
+    sdf_folder = os.path.dirname(sdf_path)
+    os.makedirs(sdf_folder, exist_ok=True)
+    if os.path.exists(sdf_path):
+        print("{} already exists! Skip!".format(sdf_path))
+        return True
+
     # get the names of the left and right mesh
     left_mesh_name_ = os.path.join(path_name, left_mesh_name)
     right_mesh_name_ = os.path.join(path_name, right_mesh_name)
@@ -131,14 +142,6 @@ def generate_sdf_give_path(path_name):
         dict_args = {"use_raymond_lighting": True, "point_size": 2, "show_world_axis": True}
         pyrender.Viewer(scene, **dict_args)
 
-    # get the path to save the sdf.
-    split_names = path_name.split("/")
-    stage = split_names[-2]
-    identity = split_names[-1]
-    sdf_path = os.path.join("../data", "sdf", stage, identity, "sdf.npy")
-    sdf_folder = os.path.dirname(sdf_path)
-    os.makedirs(sdf_folder, exist_ok=True)
-
     # save the generated sdf files.
     point_sdf = np.concatenate((points, np.expand_dims(sdf, axis=-1)), axis=-1)
     np.save(sdf_path, point_sdf)
@@ -146,11 +149,16 @@ def generate_sdf_give_path(path_name):
 
 def generate_sdf():
     path_list = glob(os.path.join(MESH_ROOT, "*", "*"))
-    length = len(path_list)
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        _ = list(
-            tqdm(executor.map(generate_sdf_give_path, path_list), total=length)
-        )
+    # length = len(path_list)
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     _ = list(
+    #         tqdm(executor.map(generate_sdf_give_path, path_list), total=length)
+    #     )
+    for path in tqdm(path_list):
+        try:
+            generate_sdf_give_path(path)
+        except:
+            print("There is {} not generated".format(path_list))
 
 
 if __name__ == '__main__':
