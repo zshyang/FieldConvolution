@@ -4,3 +4,4 @@ dataset:
   scalar: 38.2
   data_augmentation: false
 version: woda_scale
+overwrite: false  # Only training is activated.
