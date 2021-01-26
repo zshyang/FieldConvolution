@@ -15,5 +15,3 @@ So still a long way to go.
 ![](../image/test_acc_wo_da.png)
 
 Test accuracy without rotation and jitter.
-
-
