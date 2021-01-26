@@ -1,6 +1,6 @@
-# the yml with a scale added.
 based_on:
-  - baseline_pointnet2.yml
+  - baseline_pointnet2_scale.yml
 dataset:
   scalar: 38.2
-version: scale
+  data_augmentation: false
+overwrite: false  # Only during training is true.
