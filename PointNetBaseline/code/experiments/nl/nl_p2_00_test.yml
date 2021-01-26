@@ -55,7 +55,7 @@ train:
   shuffle: true
   summary_steps: 1  # How many steps to save the summary.
   test_epochs: 1  # How many epochs to do one test.
-version: nl_p2_00
+version: mci_p2_00
 vis:
   name:
     - shapecad_vis  # python file name

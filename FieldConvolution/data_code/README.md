@@ -47,4 +47,3 @@ Mean is 0.4757142857142857 Std is 0.046532849928292375
 - For ['NL_pos', 'NL_neg'], the 10 fold accuracy is: 
 
 Mean is 0.6140845070422534 Std is 0.03161963988823049
-
