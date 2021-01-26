@@ -1,6 +1,6 @@
 # the yml without data augmentation.
 based_on:
-  - baseline_pointnet2.yml
+  - baseline_pointnet2_without_da.yml
 dataset:
   data_augmentation: false
-version: without_da
+overwrite: false  # Only training is activated.

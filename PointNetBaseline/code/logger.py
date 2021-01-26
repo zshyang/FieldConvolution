@@ -59,18 +59,19 @@ def parse_logger(options: EasyDict):
         acc = acc_line[-9:-1]
         val_acc_list.append(float(acc))
 
+    # get the step, epoch, and the checkpoint file name
+    epoch = np.argmax(np.array(val_acc_list)) + 1
+    step = number_step_each_epoch * epoch
+    checkpoint_file = "{:06d}_{:06d}.pt".format(step, epoch)
+
     # optionally plot the accuracy
-    visualization = False
+    visualization = True
     if visualization:
         import matplotlib.pyplot as plt
         plt.plot(val_acc_list)
         plt.ylabel("the accuracy")
         plt.show()
-
-    # get the step, epoch, and the checkpoint file name
-    epoch = np.argmax(np.array(val_acc_list)) + 1
-    step = number_step_each_epoch * epoch
-    checkpoint_file = "{:06d}_{:06d}.pt".format(step, epoch)
+        print(val_acc_list[epoch - 1])
 
     # update the options.
     options.checkpoint_file = checkpoint_file
