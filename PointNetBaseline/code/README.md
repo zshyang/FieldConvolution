@@ -12,4 +12,8 @@ We get validation accuracy 80.3279, while test accuracy just 62.8205.
 
 So still a long way to go.
 
+![](../image/test_acc_wo_da.png)
+
+Test accuracy without rotation and jitter.
+
 
