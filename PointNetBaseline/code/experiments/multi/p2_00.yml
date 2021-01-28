@@ -26,7 +26,7 @@ model:
   name:
     - pointnet2_baseline  # python file name
     - Net  # python class name
-  out_channel: 2
+  out_channel: 5
 name: shapecad
 num_gpus: 1
 num_workers: 2
