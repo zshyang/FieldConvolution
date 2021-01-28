@@ -25,4 +25,12 @@ unit-scale & no da                  | 85.2459       | 75.6410
 constant-scale & da                 | 78.6885       | 71.7949
 constant-scale & no da              | 85.2459       | 78.2051
 
+### The table of different experiment set.
 
+All the experiments are conducted under the same data processing, constant scaling and no data augmentation.
+
+Comparison group    |validation     | test      | volume
+---                 | ---           | ---       | ---
+AD_pos NL_neg       | 85.2459       | 78.2051   | 70 +- 3
+MCI_pos MCI_neg     | 72.2222       | 57.1429   | 48 +- 5
+NL_pos NL_neg       | 69.0909       | 60.5634   | 61 +- 3

@@ -4,8 +4,8 @@ dataset:
     - pointnet2  # python file name
     - PointNetPlusPlus  # python class name
   label:
-    - NL_pos
-    - NL_neg
+    - MCI_pos
+    - MCI_neg
   meta_fn: 10_fold/000.json
   scalar: 38.2
   data_augmentation: false
