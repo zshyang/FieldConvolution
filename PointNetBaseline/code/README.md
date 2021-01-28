@@ -29,8 +29,18 @@ constant-scale & no da              | 85.2459       | 78.2051
 
 All the experiments are conducted under the same data processing, constant scaling and no data augmentation.
 
-Comparison group    |validation     | test      | volume
+Comparison group    | validation    | test      | volume
 ---                 | ---           | ---       | ---
 AD_pos NL_neg       | 85.2459       | 78.2051   | 70 +- 3
 MCI_pos MCI_neg     | 72.2222       | 57.1429   | 48 +- 5
 NL_pos NL_neg       | 69.0909       | 60.5634   | 61 +- 3
+
+### The table of 10 folds on pointnet
+
+Comparison group    | fold 00           | fold 01  
+---                 | ---               | ---      
+AD_pos NL_neg       | 85.2459 / 78.2051 |   
+MCI_pos MCI_neg     | 72.2222 / 57.1429 | 
+NL_pos NL_neg       | 69.0909 / 60.5634 | 
+
+The first item in each entry is validation accuracy. The second one is test accuracy.
