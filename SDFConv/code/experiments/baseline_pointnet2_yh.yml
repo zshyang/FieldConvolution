@@ -1,7 +1,0 @@
-based_on:
-  - baseline_pointnet2.yml
-dataset:
-  name:
-    - pointnet2_yh  # python file name
-    - PointNetPlusPlus  # python class name
-version: yonghui_data

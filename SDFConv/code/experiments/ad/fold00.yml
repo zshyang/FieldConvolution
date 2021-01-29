@@ -1,13 +1,15 @@
 checkpoint_dir: checkpoint
 dataset:
   name:
-    - shapecad  # python file name
-    - ShapeCad  # python class name
+    - pointnet2_field_conv  # python file name
+    - PointNetPlusPlus  # python class name
   label:
     - AD_pos
     - NL_neg
-  test_fn: fake_val.json
-  train_fn: fake_train.json
+  meta_fn: 10_fold/000.json
+  scalar: 40.0
+  data_augmentation: false
+  sdf_sample_number: 10000
 latest_checkpoint: false  # Once overwrite, useless.
 load_epoch: 5  # Once overwrite, useless.
 load_step: 80  # Once overwrite, useless.
@@ -18,18 +20,17 @@ loss:
     - classifier  # python file name
     - CrossEntropyLoss  # python class name
 model:
-#  bilinear_up: true
   in_channel: 3
   name:
-    - shapecad  # python file name
+    - pointnet2_field_conv  # python file name
     - Net  # python class name
-  out_channel: 1
+  out_channel: 2
 name: shapecad
 num_gpus: 1
-num_workers: 2
+num_workers: 5
 optim:
   adam_beta1: 0.9
-  lr: 1.0e-1
+  lr: 1.0e-4
   lr_factor: 0.1
   lr_step:
     - 30
@@ -39,23 +40,23 @@ optim:
   wd: 1.0e-06
 overwrite: true  # Only training is activated.
 pin_memory: true
-save_dir: save_ckpt_log_summary
+save_dir: ../data/save_ckpt_log_summary
 seed: 4124036635
 summary_dir: summary
 test:
-  batch_size: 2
-  kc_steps: 2
+  batch_size: 16
+  kc_steps: 20000
   shuffle: true
   summary_steps: 1  # How many steps to print the info.
 train:
-  batch_size: 2
-  checkpoint_steps: 10 # How many steps to save the checkpoint.
+  batch_size: 32
+  checkpoint_steps: 1000 # How many steps to save the checkpoint.
   kc_steps: 16
-  num_epochs: 10
+  num_epochs: 100
   shuffle: true
   summary_steps: 1  # How many steps to save the summary.
   test_epochs: 1  # How many epochs to do one test.
-version: vanilla
+version: ad00
 vis:
   name:
     - shapecad_vis  # python file name

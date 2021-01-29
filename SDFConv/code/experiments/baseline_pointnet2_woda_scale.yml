@@ -1,6 +1,0 @@
-based_on:
-  - baseline_pointnet2.yml
-dataset:
-  scalar: 38.2
-  data_augmentation: false
-version: woda_scale
