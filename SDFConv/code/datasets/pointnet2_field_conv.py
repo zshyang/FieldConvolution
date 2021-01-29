@@ -234,7 +234,6 @@ def test():
     print("The length of the test data set is {}".format(len(test_dt)))
 
 
-
 def test_1():
     """Test the collate function.
     """
@@ -294,57 +293,46 @@ def test_1():
         break
 
 
-def test_6():
-    """Go over the data loader.
-    """
-    print("In test 6, ")
-    config = None
-    dataset = EasyDict()
-    dataset.label = ["AD_pos", "NL_neg"]
-    dataset.test_fn = "AD_pos_NL_neg_test.json"
-    dataset.train_fn = "AD_pos_NL_neg_train.json"
-    options = EasyDict()
+def plot_sdf(point_sdf, scene):
 
-    dt = PointNetPlusPlus(config=config, dataset=dataset, training=True)
-    from torch.utils.data import DataLoader
-    import random
-    random.seed(4124036635)
-    np.random.seed(4124036635)
-    torch.manual_seed(4124036635)
-    train_data_loader = DataLoader(
-        dt,
-        batch_size=128,
-        num_workers=10,
-        pin_memory=True,
-        shuffle=True,
-        collate_fn=dt.collate,
-    )
-
-    for i, batch in enumerate(train_data_loader):
-        print(i)
-        for item in batch:
-            print(item, batch[item].shape, batch[item].max())
-
-
-def test_9():
-    """Test the sampling is good or not.
-    """
     import pyrender
-    print("In test 9, ")
+
+    points = point_sdf[:, :3]
+    sdf = point_sdf[:, 3]
+
+    colors = np.zeros(points.shape)
+    colors[sdf < 0, 2] = 1
+    colors[sdf > 0, 0] = 1
+
+    cloud = pyrender.Mesh.from_points(points, colors=colors)
+    scene.add(cloud)
+
+    return scene
+
+
+def test_2():
+    """Visualize the sdf.
+    """
+    print("In test 2, ")
 
     config = None
     dataset = EasyDict()
     dataset.label = ["AD_pos", "NL_neg"]
-    dataset.test_fn = "AD_pos_NL_neg_test.json"
-    dataset.train_fn = "AD_pos_NL_neg_train.json"
+    dataset.meta_fn = "10_fold/000.json"
+    dataset.scalar = 40.0
+    dataset.data_augmentation = False
 
-    dt = PointNetPlusPlus(config=config, dataset=dataset, training=True)
-    print(len(dt))
+    print("For training data set: ")
+    train_dt = PointNetPlusPlus(config=config, dataset=dataset, training="train")
+    print("The length of the train data set is {}".format(len(train_dt)))
+    dt_item = train_dt[3]
 
-    point = dt[3]["point"]
+    # plot the sdf
+    import pyrender
     scene = pyrender.Scene()
-    visualize_point(point, scene)
-    viewer = pyrender.Viewer(scene, use_raymond_lighting=True, point_size=2)
+    plot_sdf(dt_item["point_sdf"], scene)
+    dict_args = {"use_raymond_lighting": True, "point_size": 2, "show_world_axis": True}
+    viewer = pyrender.Viewer(scene, **dict_args)
 
 
 if __name__ == '__main__':
