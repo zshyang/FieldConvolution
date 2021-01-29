@@ -1,6 +1,7 @@
 import os
 import shutil
 import trimesh
+import json
 import numpy as np
 
 from glob import glob
@@ -61,30 +62,33 @@ def generate_meta_size():
     # gather the list of identity
     stage_identity_list = glob("/home/exx/georgey/dataset/hippocampus/obj/*/*")
     mesh_root = os.path.join("/home/exx/georgey/dataset/hippocampus/obj")
+    radius_dict = dict()
 
     # go over the mesh files
     for stage_identity in tqdm(stage_identity_list):
-        print(stage_identity)
+
         # load and merge the mesh
         stage = stage_identity.split("/")[-2]
         identity = stage_identity.split("/")[-1]
         mesh = load_merge_left_right_mesh(mesh_root, stage, identity)
-        mesh.show()
-        # find the name of the mesh.
 
-
-        # furthest point sampling the vertices
-        fps_vertices = farthest_point_sample(vertices, npoint=2500)
-
-        # center, and scale the mesh
-        centered_vertices = fps_vertices - np.expand_dims(np.mean(fps_vertices, axis=0), 0)  # center
-        if self.dataset.scalar is None:
-            dist = np.max(np.sqrt(np.sum(centered_vertices ** 2, axis=1)), 0)
-            scaled_vertices = centered_vertices / dist  # scale
-        else:
-            scaled_vertices = centered_vertices / self.dataset.scalar  # scale
         # compute the bounding box radius
-        # save the radius into the
+        vertices = np.array(mesh.vertices, dtype=np.float32)
+        vertices = vertices - np.expand_dims(np.mean(vertices, axis=0), 0)  # center
+        dist = np.max(np.sqrt(np.sum(vertices ** 2, axis=1)), 0)
+
+        # save the radius, stage, and identity in to dict.
+        if stage not in radius_dict:
+            radius_dict[stage] = dict()
+            if identity not in radius_dict[stage]:
+                radius_dict[stage][identity] = str(dist)
+        else:
+            if identity not in radius_dict[stage]:
+                radius_dict[stage][identity] = str(dist)
+
+    # save the json.
+    with open(meta_fn, "w") as file:
+        json.dump(radius_dict, file)
 
 
 def main():
@@ -93,7 +97,9 @@ def main():
         move_meta()
 
     # generate the size meta.
-    generate_meta_size()
+    generated = True
+    if not generated:
+        generate_meta_size()
 
 
 if __name__ == '__main__':
