@@ -39,8 +39,8 @@ NL_pos NL_neg       | 69.0909       | 60.5634   | 61 +- 3
 
 Comparison group    | fold 00           | fold 01  
 ---                 | ---               | ---      
-AD_pos NL_neg       | 85.2459 / 78.2051 |   
+AD_pos NL_neg       | 85.2459 / 78.2051 | 85.2459 / 80.7692  
 MCI_pos MCI_neg     | 72.2222 / 57.1429 | 
-NL_pos NL_neg       | 69.0909 / 60.5634 | 
+NL_pos NL_neg       | 69.0909 / 60.5634 | 70.9091 / 
 
 The first item in each entry is validation accuracy. The second one is test accuracy.
