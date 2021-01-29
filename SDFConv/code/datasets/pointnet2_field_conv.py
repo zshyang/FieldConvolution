@@ -175,15 +175,14 @@ class PointNetPlusPlus(Dataset):
                 "label": tensor with shape (B) contains label.
         """
         # Point.
-        point = torch.stack([torch.from_numpy(item["point"]) for item in batch])
-        point = point.permute(0, 2, 1)
+        point = torch.stack([torch.from_numpy(item["point_sdf"]) for item in batch])
 
         # label
         label = torch.cat([torch.tensor(item["label"]).view(1) for item in batch], dim=0)
 
         return {
             "label": label,
-            "xyz": point,
+            "xyz_sdf": point,
         }
 
 
@@ -235,28 +234,61 @@ def test():
     print("The length of the test data set is {}".format(len(test_dt)))
 
 
+
 def test_1():
     """Test the collate function.
     """
+    from torch.utils.data import DataLoader
+
     print("In test 1, ")
     config = None
     dataset = EasyDict()
     dataset.label = ["AD_pos", "NL_neg"]
-    dataset.test_fn = "AD_pos_NL_neg_test.json"
-    dataset.train_fn = "AD_pos_NL_neg_train.json"
-    options = EasyDict()
+    dataset.meta_fn = "10_fold/000.json"
+    dataset.scalar = 40.0
+    dataset.data_augmentation = False
 
-    dt = PointNetPlusPlus(config=config, dataset=dataset, training=False)
-    from torch.utils.data import DataLoader
+    print("For training data set: ")
+    train_dt = PointNetPlusPlus(config=config, dataset=dataset, training="train")
     train_data_loader = DataLoader(
-        dt,
+        train_dt,
         batch_size=4,
         num_workers=10,
         pin_memory=True,
         shuffle=True,
-        collate_fn=dt.collate,
+        collate_fn=train_dt.collate,
     )
     for batch in train_data_loader:
+        for item in batch:
+            print(item, batch[item].shape)
+        break
+
+    print("For validation data set: ")
+    val_dt = PointNetPlusPlus(config=config, dataset=dataset, training="val")
+    data_loader = DataLoader(
+        val_dt,
+        batch_size=4,
+        num_workers=10,
+        pin_memory=True,
+        shuffle=True,
+        collate_fn=val_dt.collate,
+    )
+    for batch in data_loader:
+        for item in batch:
+            print(item, batch[item])
+        break
+
+    print("For test data set: ")
+    test_dt = PointNetPlusPlus(config=config, dataset=dataset, training="test")
+    data_loader = DataLoader(
+        test_dt,
+        batch_size=4,
+        num_workers=10,
+        pin_memory=True,
+        shuffle=True,
+        collate_fn=test_dt.collate,
+    )
+    for batch in data_loader:
         for item in batch:
             print(item, batch[item])
         break
@@ -316,4 +348,4 @@ def test_9():
 
 
 if __name__ == '__main__':
-    test()
+    test_1()
