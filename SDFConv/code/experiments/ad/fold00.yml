@@ -49,7 +49,7 @@ test:
   shuffle: true
   summary_steps: 1  # How many steps to print the info.
 train:
-  batch_size: 32
+  batch_size: 4
   checkpoint_steps: 1000 # How many steps to save the checkpoint.
   kc_steps: 16
   num_epochs: 100
