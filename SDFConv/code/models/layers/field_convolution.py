@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 import torch.nn as nn
-from FieldConvolution.data_code.visualize_sdf import load_sdf
 from torch.nn.parameter import Parameter
 import math
 
@@ -337,6 +336,7 @@ class WeightNet(nn.Module):
 
 
 def test():
+    from FieldConvolution.data_code.visualize_sdf import load_sdf
 
     # Load the sdf.
     point_0, sdf_0 = load_sdf("../../../data/141_S_1255_I297902_RHippo_60k.npz")
