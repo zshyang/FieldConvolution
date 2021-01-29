@@ -12,6 +12,7 @@ from easydict import EasyDict
 
 META_ROOT = os.path.join("../data/", "meta")
 SDF_ROOT = os.path.join("../data/", "sdf")
+sdf_fn = "sdf.npy"
 
 
 def farthest_point_sample(point, npoint):
@@ -74,13 +75,13 @@ def clean_name_list(name_list: list) -> list:
 class PointNetPlusPlus(Dataset):
     """Dataset for mesh classification for PointNet++.
     """
-    def __init__(self, config, dataset: EasyDict, training: bool):
+    def __init__(self, config, dataset: EasyDict, training: str):
         """Initialize the class.
 
         Args:
             config (module)
             dataset (easydict.EasyDict)
-            training (bool)
+            training (str): the stage of training
         """
         self.config = config
         self.dataset = dataset
@@ -124,7 +125,7 @@ class PointNetPlusPlus(Dataset):
             self.radius_list = json.load(file)
 
     def __len__(self):
-        return len(self.name_lists["sdf"])
+        return len(self.name_lists["name_list"])
 
     def __getitem__(self, index: int) -> dict:
         """The function to get an item in the dataset.
@@ -136,22 +137,27 @@ class PointNetPlusPlus(Dataset):
             The dictionary to be returned.
 
         """
-        # Load the signed distance field.
-        sdf_file_name = self.name_lists["sdf"][index]
+        # load the sdf
+        stage_identity = self.name_lists["name_list"][index]
+        sdf_file_name = os.path.join(
+            SDF_ROOT, stage_identity[0], stage_identity[1], sdf_fn
+        )
         sdf = np.load(sdf_file_name)
-        sdf_pos = sdf["pos"]
-        sdf_neg = sdf["neg"]
-        point_sdf = np.concatenate((sdf_pos, sdf_neg), axis=0)
 
-        # Use FPS to pick 2500 points from the surface.
-        picked_point = farthest_point_sample(surface_point, 2500)
+        # sample the sdf
+        idx = np.random.randint(sdf.shape[0], size=10000)
+        sdf = sdf[idx, :]
+
+        # scale the sdf
+        radius = self.radius_list[stage_identity[0]][stage_identity[1]]
+        sdf = sdf * float(radius) / self.dataset.scalar
 
         # label
-        label = sdf_file_name.split("/")[-2]
+        label = stage_identity[0]
         label = self.label_dict[label]
 
         return {
-            "label": label, "point": picked_point,
+            "label": label, "point_sdf": sdf,
         }
 
     @staticmethod
@@ -206,18 +212,27 @@ def test():
     config = None
     dataset = EasyDict()
     dataset.label = ["AD_pos", "NL_neg"]
-    dataset.test_fn = "AD_pos_NL_neg_test.json"
-    dataset.train_fn = "AD_pos_NL_neg_train.json"
+    dataset.meta_fn = "10_fold/000.json"
+    dataset.scalar = 40.0
+    dataset.data_augmentation = False
 
-    dt = PointNetPlusPlus(config=config, dataset=dataset, training=True)
-    print(len(dt))
-
-    for key in dt[3]:
-        value = dt[3][key]
+    print("For training data set: ")
+    train_dt = PointNetPlusPlus(config=config, dataset=dataset, training="train")
+    print("The length of the train data set is {}".format(len(train_dt)))
+    for key in train_dt[3]:
+        value = train_dt[3][key]
         if key != "label":
-            print(key, dt[3][key].shape)
+            print(key, train_dt[3][key].shape)
         else:
             print(key, value)
+
+    print("For validation data set: ")
+    val_dt = PointNetPlusPlus(config=config, dataset=dataset, training="val")
+    print("The length of the validation data set is {}".format(len(val_dt)))
+
+    print("For test data set: ")
+    test_dt = PointNetPlusPlus(config=config, dataset=dataset, training="test")
+    print("The length of the test data set is {}".format(len(test_dt)))
 
 
 def test_1():
@@ -301,4 +316,4 @@ def test_9():
 
 
 if __name__ == '__main__':
-    test_9()
+    test()
