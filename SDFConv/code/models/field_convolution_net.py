@@ -5,7 +5,6 @@ import torch
 import torch.nn as nn
 from easydict import EasyDict
 from models.layers.field_convolution import FieldConv
-# A random change
 
 
 class Net(nn.Module):
@@ -20,11 +19,9 @@ class Net(nn.Module):
         super(Net, self).__init__()
 
         self.conv_1 = FieldConv(
-            edge_length=0.01, filter_sample_number=32, center_number=4096, in_channels=1, out_channels=32,
-            feature_is_sdf=True,
+            edge_length=0.01, filter_sample_number=32, center_number=4096,
+            in_channels=1, out_channels=32, feature_is_sdf=True,
         )
-
-
 
     def forward(self, batch: dict) -> dict:
         """The forward function.
