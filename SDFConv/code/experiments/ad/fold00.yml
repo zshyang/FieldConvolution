@@ -44,7 +44,7 @@ save_dir: ../data/save_ckpt_log_summary
 seed: 4124036635
 summary_dir: summary
 test:
-  batch_size: 16
+  batch_size: 4
   kc_steps: 20000
   shuffle: true
   summary_steps: 1  # How many steps to print the info.
