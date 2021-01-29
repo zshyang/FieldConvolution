@@ -94,24 +94,34 @@ class PointNetPlusPlus(Dataset):
             label_dict[label] = i
         self.label_dict = label_dict
 
-        # To load training name list or validation name list.
-        if training:
-            json_file_path = os.path.join(META_ROOT, dataset.train_fn)
-            with open(json_file_path, "r") as file:
-                name_list = json.load(file)
+        # load meta list
+        json_file_path = os.path.join(META_ROOT, self.dataset.meta_fn)
+        with open(json_file_path, "r") as file:
+            meta_list = json.load(file)
 
-            # sdf file list.
-            sdf_name_list = [get_sdf_path(name) for name in name_list]
-            self.name_lists.update({"sdf": sdf_name_list})
+        # update the name list
+        name_list = []
+        for label in self.dataset.label:
 
-        else:
-            json_file_path = os.path.join(META_ROOT, dataset.test_fn)
-            with open(json_file_path, "r") as file:
-                name_list = json.load(file)
+            # the stage to be loaded
+            if training == "train":
+                identity_list = meta_list[label]["train"]
+            elif training == "val":
+                identity_list = meta_list[label]["val"]
+            elif training == "test":
+                identity_list = meta_list[label]["test"]
+            else:
+                raise ValueError("This stage {} is not known!".format(training))
 
-            # sdf file list.
-            sdf_name_list = [get_sdf_path(name) for name in name_list]
-            self.name_lists.update({"sdf": sdf_name_list})
+            # concatenate stage label with identity
+            stage_identity_list = [[label, identity] for identity in identity_list]
+            name_list.extend(stage_identity_list)
+
+        self.name_lists["name_list"] = name_list
+
+        # load the scalar information
+        with open(os.path.join(META_ROOT, "size.json"), "r") as file:
+            self.radius_list = json.load(file)
 
     def __len__(self):
         return len(self.name_lists["sdf"])

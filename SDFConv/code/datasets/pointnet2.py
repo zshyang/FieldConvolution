@@ -16,38 +16,6 @@ right_mesh_name = "RHippo_60k.obj"
 MESH_ROOT = "/home/exx/georgey/dataset/hippocampus/obj/"
 
 
-# def get_sdf_path(name: [str]) -> str:
-#     """Get the path to the signed distance field file.
-#
-#     Args:
-#         name: The list of string information.
-#             name[0]: The stage name.
-#             name[1]: The index name.
-#
-#     Returns:
-#         The path to the sdf file.
-#     """
-#     assert len(name) == 2, "The length of the input name is not correct!"
-#     return os.path.join(SDF_ROOT, name[0], "{}.npz".format(name[1]))
-
-
-# def clean_name_list(name_list: list) -> list:
-#     """Clean redundant name from the name list.
-#
-#     Args:
-#         name_list: The name list.
-#
-#     Returns:
-#         return_name_list: The cleaned name list.
-#     """
-#     return_name_list = []
-#     for name in name_list:
-#         return_name = [name[0], name[1]]
-#         if return_name not in return_name_list:
-#             return_name_list.append(return_name)
-#     return return_name_list
-
-
 class PointNetPlusPlus(Dataset):
     """Dataset for mesh classification for PointNet++.
     """
@@ -94,8 +62,6 @@ class PointNetPlusPlus(Dataset):
             stage_identity_list = [[label, identity] for identity in identity_list]
             name_list.extend(stage_identity_list)
         self.name_lists["name_list"] = name_list
-
-        # load the scalar information
 
     def __len__(self):
         return len(self.name_lists["name_list"])
