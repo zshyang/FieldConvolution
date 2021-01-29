@@ -1,9 +1,14 @@
 import os
 import shutil
 import trimesh
+import numpy as np
 
 from glob import glob
 from tqdm import tqdm
+
+
+left_mesh_name = "LHippo_60k.obj"
+right_mesh_name = "RHippo_60k.obj"
 
 
 def move_meta():
@@ -17,7 +22,34 @@ def move_meta():
 
 
 def load_merge_left_right_mesh(mesh_root, stage, identity):
+    # get the name of the mesh
+    left_mesh_name_ = os.path.join(
+        mesh_root, stage, identity, left_mesh_name
+    )
+    right_mesh_name_ = os.path.join(
+        mesh_root, stage, identity, right_mesh_name
+    )
 
+    # load the mesh
+    dict_args = {"process": False}
+    left_mesh = trimesh.load(left_mesh_name_, **dict_args)
+    right_mesh = trimesh.load(right_mesh_name_, **dict_args)
+
+    # concatenate the vertices
+    left_vertices = np.array(left_mesh.vertices, dtype=np.float32)
+    right_vertices = np.array(right_mesh.vertices, dtype=np.float32)
+    vertices = np.concatenate((left_vertices, right_vertices), axis=0)
+
+    # concatenate the faces
+    left_faces = np.array(left_mesh.faces, dtype=np.int)
+    right_faces = np.array(right_mesh.faces, dtype=np.int)
+    faces = np.concatenate([left_faces, right_faces + left_vertices.shape[0]], axis=0)
+
+    mesh = trimesh.Trimesh(
+        vertices=vertices, faces=faces, process=False
+    )
+
+    return mesh
 
 
 def generate_meta_size():
@@ -28,25 +60,18 @@ def generate_meta_size():
 
     # gather the list of identity
     stage_identity_list = glob("/home/exx/georgey/dataset/hippocampus/obj/*/*")
+    mesh_root = os.path.join("/home/exx/georgey/dataset/hippocampus/obj")
 
     # go over the mesh files
     for stage_identity in tqdm(stage_identity_list):
         print(stage_identity)
         # load and merge the mesh
+        stage = stage_identity.split("/")[-2]
+        identity = stage_identity.split("/")[-1]
+        mesh = load_merge_left_right_mesh(mesh_root, stage, identity)
+        mesh.show()
         # find the name of the mesh.
-        stage_identity = self.name_lists["name_list"][index]
-        left_mesh_name_ = os.path.join(MESH_ROOT, stage_identity[0], stage_identity[1], left_mesh_name)
-        right_mesh_name_ = os.path.join(MESH_ROOT, stage_identity[0], stage_identity[1], right_mesh_name)
 
-        # load the mesh
-        dict_args = {"process": False}
-        left_mesh = trimesh.load(left_mesh_name_, **dict_args)
-        right_mesh = trimesh.load(right_mesh_name_, **dict_args)
-
-        # concatenate the vertices
-        left_vertices = np.array(left_mesh.vertices, dtype=np.float32)
-        right_vertices = np.array(right_mesh.vertices, dtype=np.float32)
-        vertices = np.concatenate((left_vertices, right_vertices), axis=0)
 
         # furthest point sampling the vertices
         fps_vertices = farthest_point_sample(vertices, npoint=2500)
