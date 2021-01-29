@@ -145,7 +145,7 @@ class PointNetPlusPlus(Dataset):
         sdf = np.load(sdf_file_name)
 
         # sample the sdf
-        idx = np.random.randint(sdf.shape[0], size=10000)
+        idx = np.random.randint(sdf.shape[0], size=self.dataset.sdf_sample_number)
         sdf = sdf[idx, :]
 
         # scale the sdf
@@ -214,6 +214,7 @@ def test():
     dataset.meta_fn = "10_fold/000.json"
     dataset.scalar = 40.0
     dataset.data_augmentation = False
+    dataset.sdf_sample_number = 10000
 
     print("For training data set: ")
     train_dt = PointNetPlusPlus(config=config, dataset=dataset, training="train")
@@ -246,6 +247,7 @@ def test_1():
     dataset.meta_fn = "10_fold/000.json"
     dataset.scalar = 40.0
     dataset.data_augmentation = False
+    dataset.sdf_sample_number = 10000
 
     print("For training data set: ")
     train_dt = PointNetPlusPlus(config=config, dataset=dataset, training="train")
@@ -321,6 +323,7 @@ def test_2():
     dataset.meta_fn = "10_fold/000.json"
     dataset.scalar = 40.0
     dataset.data_augmentation = False
+    dataset.sdf_sample_number = 1000000
 
     print("For training data set: ")
     train_dt = PointNetPlusPlus(config=config, dataset=dataset, training="train")
@@ -330,10 +333,10 @@ def test_2():
     # plot the sdf
     import pyrender
     scene = pyrender.Scene()
-    plot_sdf(dt_item["point_sdf"], scene)
+    scene = plot_sdf(dt_item["point_sdf"], scene)
     dict_args = {"use_raymond_lighting": True, "point_size": 2, "show_world_axis": True}
     viewer = pyrender.Viewer(scene, **dict_args)
 
 
 if __name__ == '__main__':
-    test_1()
+    test_2()
