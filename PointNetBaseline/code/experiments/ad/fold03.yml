@@ -1,0 +1,6 @@
+based_on:
+  - ../baseline_pointnet2_woda_scale.yml
+dataset:
+  meta_fn: 10_fold/003.json
+num_workers: 5
+version: ad_fold03
