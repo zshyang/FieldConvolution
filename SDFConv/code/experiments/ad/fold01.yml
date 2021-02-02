@@ -1,5 +1,5 @@
 based_on:
-  - ../baseline_pointnet2_woda_scale.yml
+  - fold00.yml
 dataset:
   meta_fn: 10_fold/001.json
-version: ad_fold01
+version: ad01
