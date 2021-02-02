@@ -1,0 +1,4 @@
+based_on:
+  - fold04.yml
+num_workers: 5
+overwrite: false  # Only training is activated.
