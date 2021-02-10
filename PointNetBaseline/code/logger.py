@@ -2,6 +2,7 @@ import logging
 import os
 from easydict import EasyDict
 import numpy as np
+from glob import glob
 
 
 def create_logger(cfg, phase="train"):
@@ -63,6 +64,15 @@ def parse_logger(options: EasyDict):
     epoch = np.argmax(np.array(val_acc_list)) + 1
     step = number_step_each_epoch * epoch
     checkpoint_file = "{:06d}_{:06d}.pt".format(step, epoch)
+
+    # remove the useless checkpoint files
+    remove_ckpt = True
+    if remove_ckpt:
+        ckpt_files = glob(options.checkpoint_dir + "/*.pt")
+        for ckpt_file in ckpt_files:
+            file_end = ckpt_file.split("/")[-1]
+            if file_end != checkpoint_file:
+                os.remove(ckpt_file)
 
     # optionally plot the accuracy
     visualization = True
