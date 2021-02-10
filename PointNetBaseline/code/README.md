@@ -45,6 +45,10 @@ NL_pos NL_neg       | 69.0909 / 60.5634 | 70.9091 / 64.7887 |                   
 
 fold 04             | fold 05             | fold 06
 ---                 | ---                 | ---
-86.8852 / 70.5128   | 86.8852 / 80.7692   |
+86.8852 / 70.5128   | 86.8852 / 80.7692   | 83.6066 / 79.4872
+
+fold 07             | fold 08             | fold 09
+---                 | ---                 | ---
+86.8852 / 80.7692   | 85.2459 / 71.7949   | 81.9672 / 76.9231
 
 The first item in each entry is validation accuracy. The second one is test accuracy.

@@ -1,0 +1,6 @@
+based_on:
+  - nl_p2_00.yml
+dataset:
+  meta_fn: 10_fold/003.json
+num_workers: 5
+version: mci_fold03
