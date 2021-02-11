@@ -23,42 +23,127 @@ class Net(nn.Module):
 
         self.base_channel = 64  # Hard coded here.
 
-        image_size = 224.0
+        image_size = 56.0
         cube_size = 2.0
 
         # the vgg network
         self.sdf_conv_1 = FieldConv(
             edge_length=(cube_size / image_size * 3.0),
-            filter_sample_number=(3 * 3), center_number=(224 * 224), in_channels=1,
+            filter_sample_number=(3 * 3), center_number=int(image_size * image_size),
+            in_channels=1,
             out_channels=self.base_channel,
             feature_is_sdf=True,
         )
         self.sdf_conv_2 = FieldConv(
             edge_length=(cube_size / image_size * 3.0),
-            filter_sample_number=(3 * 3), center_number=(224 * 224), in_channels=self.base_channel,
+            filter_sample_number=(3 * 3), center_number=int(image_size * image_size),
+            in_channels=self.base_channel,
             out_channels=self.base_channel,
             feature_is_sdf=False,
         )
-        self.sdf_max_pooling_1 =
-        self.sdf_conv_3 =
 
+        image_size = image_size / 2.0
+        self.sdf_max_pooling_1 = FieldPooling(center_number=int(image_size * image_size))
+        self.sdf_conv_3 = FieldConv(
+            edge_length=(cube_size / image_size * 3.0),
+            filter_sample_number=(3 * 3), center_number=int(image_size * image_size),
+            in_channels=self.base_channel,
+            out_channels=(self.base_channel * 2),
+            feature_is_sdf=False,
+        )
+        self.sdf_conv_4 = FieldConv(
+            edge_length=(cube_size / image_size * 3.0),
+            filter_sample_number=(3 * 3), center_number=int(image_size * image_size),
+            in_channels=(self.base_channel * 2),
+            out_channels=(self.base_channel * 2),
+            feature_is_sdf=False,
+        )
 
+        image_size = image_size / 2.0
+        self.sdf_max_pooling_2 = FieldPooling(center_number=int(image_size * image_size))
+        self.sdf_conv_5 = FieldConv(
+            edge_length=(cube_size / image_size * 3.0),
+            filter_sample_number=(3 * 3), center_number=int(image_size * image_size),
+            in_channels=(self.base_channel * 2),
+            out_channels=(self.base_channel * 4),
+            feature_is_sdf=False,
+        )
+        self.sdf_conv_6 = FieldConv(
+            edge_length=(cube_size / image_size * 3.0),
+            filter_sample_number=(3 * 3), center_number=int(image_size * image_size),
+            in_channels=(self.base_channel * 4),
+            out_channels=(self.base_channel * 4),
+            feature_is_sdf=False,
+        )
+        self.sdf_conv_7 = FieldConv(
+            edge_length=(cube_size / image_size * 3.0),
+            filter_sample_number=(3 * 3), center_number=int(image_size * image_size),
+            in_channels=(self.base_channel * 4),
+            out_channels=(self.base_channel * 4),
+            feature_is_sdf=False,
+        )
 
+        image_size = image_size / 2.0
+        self.sdf_max_pooling_3 = FieldPooling(center_number=int(image_size * image_size))
+        self.sdf_conv_8 = FieldConv(
+            edge_length=(cube_size / image_size * 3.0),
+            filter_sample_number=(3 * 3), center_number=int(image_size * image_size),
+            in_channels=(self.base_channel * 4),
+            out_channels=(self.base_channel * 8),
+            feature_is_sdf=False,
+        )
+        self.sdf_conv_9 = FieldConv(
+            edge_length=(cube_size / image_size * 3.0),
+            filter_sample_number=(3 * 3), center_number=int(image_size * image_size),
+            in_channels=(self.base_channel * 8),
+            out_channels=(self.base_channel * 8),
+            feature_is_sdf=False,
+        )
+        self.sdf_conv_10 = FieldConv(
+            edge_length=(cube_size / image_size * 3.0),
+            filter_sample_number=(3 * 3), center_number=int(image_size * image_size),
+            in_channels=(self.base_channel * 8),
+            out_channels=(self.base_channel * 8),
+            feature_is_sdf=False,
+        )
 
+        image_size = image_size / 2.0
+        self.sdf_max_pooling_4 = FieldPooling(center_number=int(image_size * image_size))
+        self.sdf_conv_11 = FieldConv(
+            edge_length=(cube_size / image_size * 3.0),
+            filter_sample_number=(3 * 3), center_number=int(image_size * image_size),
+            in_channels=(self.base_channel * 8),
+            out_channels=(self.base_channel * 8),
+            feature_is_sdf=False,
+        )
+        self.sdf_conv_12 = FieldConv(
+            edge_length=(cube_size / image_size * 3.0),
+            filter_sample_number=(3 * 3), center_number=int(image_size * image_size),
+            in_channels=(self.base_channel * 8),
+            out_channels=(self.base_channel * 8),
+            feature_is_sdf=False,
+        )
+        self.sdf_conv_13 = FieldConv(
+            edge_length=(cube_size / image_size * 3.0),
+            filter_sample_number=(3 * 3), center_number=int(image_size * image_size),
+            in_channels=(self.base_channel * 8),
+            out_channels=(self.base_channel * 8),
+            feature_is_sdf=False,
+        )
+
+        image_size = image_size / 2.0
+        self.sdf_max_pooling_5 = FieldPooling(center_number=int(image_size * image_size))
+        self.sdf_conv_14 = FieldConv(
+            edge_length=float(cube_size),
+            filter_sample_number=(7 * 7), center_number=int(1),
+            in_channels=(self.base_channel * 8),
+            out_channels=(self.base_channel * 16),
+            feature_is_sdf=False,
+        )
 
         self.num_class = options.model.out_channel
 
-        self.sa1 = PointNetSetAbstraction(
-            npoint=512, radius=0.2, nsample=32, in_channel=self.in_channel+3, mlp=[64, 64, 128], group_all=False
-        )  # The in channels are increased by 3.
-        self.sa2 = PointNetSetAbstraction(
-            npoint=128, radius=0.4, nsample=64, in_channel=128 + 3, mlp=[128, 128, 256], group_all=False
-        )
-        self.sa3 = PointNetSetAbstraction(
-            npoint=None, radius=None, nsample=None, in_channel=256 + 3, mlp=[256, 512, 1024], group_all=True
-        )
-
-        self.fc1 = nn.Linear(1024, 512)
+        self.fc1 = nn.Linear(1024 + 3, 512)
         self.bn1 = nn.BatchNorm1d(512)
         self.drop1 = nn.Dropout(0.4)
         self.fc2 = nn.Linear(512, 256)
@@ -80,12 +165,26 @@ class Net(nn.Module):
 
         batch_size, _, _ = xyz_sdf.shape
 
-        field_feature = self.field_conv(xyz_sdf)
-        field_feature = field_feature.permute(0, 2, 1)
-
-        l1_xyz, l1_points = self.sa1(field_feature[:, :3, :], field_feature[:, 3:, :])
-        l2_xyz, l2_points = self.sa2(l1_xyz, l1_points)
-        l3_xyz, l3_points = self.sa3(l2_xyz, l2_points)
+        out = self.sdf_conv_1(xyz_sdf)
+        out = self.sdf_conv_2(out)
+        out = self.sdf_max_pooling_1(out)
+        out = self.sdf_conv_3(out)
+        out = self.sdf_conv_4(out)
+        out = self.sdf_max_pooling_2(out)
+        out = self.sdf_conv_5(out)
+        out = self.sdf_conv_6(out)
+        out = self.sdf_conv_7(out)
+        out = self.sdf_max_pooling_3(out)
+        out = self.sdf_conv_8(out)
+        out = self.sdf_conv_9(out)
+        out = self.sdf_conv_10(out)
+        out = self.sdf_max_pooling_4(out)
+        out = self.sdf_conv_11(out)
+        out = self.sdf_conv_12(out)
+        out = self.sdf_conv_13(out)
+        out = self.sdf_max_pooling_5(out)
+        out = self.sdf_conv_14(out)
+        print(out.shape)
 
         x = l3_points.view(batch_size, 1024)
         x = self.drop1(F.relu(self.bn1(self.fc1(x))))

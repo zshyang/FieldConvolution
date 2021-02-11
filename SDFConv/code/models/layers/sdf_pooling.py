@@ -49,6 +49,7 @@ class FieldPooling(nn.Module):
         index = farthest_point_sample(points, self.center_number)
         fps_points = index_points(points, index)
         fps_feature = index_points(feature, index)
+        torch.cuda.empty_cache()
 
         # Concatenate the new location and new feature.
         out_feature = torch.cat([fps_points, fps_feature], -1)
