@@ -7,6 +7,7 @@ import torch.nn.functional as F
 from models.pointnet_util import PointNetSetAbstraction
 from easydict import EasyDict
 from models.layers.field_convolution import FieldConv
+from models.layers.sdf_pooling import FieldPooling
 
 
 class Net(nn.Module):
@@ -20,14 +21,30 @@ class Net(nn.Module):
         """
         super(Net, self).__init__()
 
-        self.in_channel = 16  # Hard coded here.
+        self.base_channel = 64  # Hard coded here.
 
-        # The first field convolution layer.
-        self.field_conv = FieldConv(
-            edge_length=0.03, filter_sample_number=64, center_number=16 ** 3, in_channels=1,
-            out_channels=self.in_channel,
+        image_size = 224.0
+        cube_size = 2.0
+
+        # the vgg network
+        self.sdf_conv_1 = FieldConv(
+            edge_length=(cube_size / image_size * 3.0),
+            filter_sample_number=(3 * 3), center_number=(224 * 224), in_channels=1,
+            out_channels=self.base_channel,
             feature_is_sdf=True,
         )
+        self.sdf_conv_2 = FieldConv(
+            edge_length=(cube_size / image_size * 3.0),
+            filter_sample_number=(3 * 3), center_number=(224 * 224), in_channels=self.base_channel,
+            out_channels=self.base_channel,
+            feature_is_sdf=False,
+        )
+        self.sdf_max_pooling_1 =
+        self.sdf_conv_3 =
+
+
+
+
 
         self.num_class = options.model.out_channel
 
