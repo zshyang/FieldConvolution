@@ -3,4 +3,4 @@ based_on:
 dataset:
   meta_fn: 10_fold/006.json
 num_workers: 5
-version: mci_fold06
+version: nl_fold06

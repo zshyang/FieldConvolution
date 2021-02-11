@@ -1,0 +1,5 @@
+based_on:
+  - baseline_pointnet2.yml
+dataset:
+  data_augmentation: false
+overwrite: false  # Only training is activated.
