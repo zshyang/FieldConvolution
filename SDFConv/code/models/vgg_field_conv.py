@@ -135,7 +135,7 @@ class Net(nn.Module):
         self.sdf_max_pooling_5 = FieldPooling(center_number=int(image_size * image_size))
         self.sdf_conv_14 = FieldConv(
             edge_length=float(cube_size),
-            filter_sample_number=(7 * 7), center_number=int(1),
+            filter_sample_number=int(image_size), center_number=int(1),
             in_channels=(self.base_channel * 8),
             out_channels=(self.base_channel * 16),
             feature_is_sdf=False,
@@ -166,27 +166,54 @@ class Net(nn.Module):
         batch_size, _, _ = xyz_sdf.shape
 
         out = self.sdf_conv_1(xyz_sdf)
+        out = F.relu(out)
+
         out = self.sdf_conv_2(out)
+        out = F.relu(out)
+
         out = self.sdf_max_pooling_1(out)
         out = self.sdf_conv_3(out)
+        out = F.relu(out)
+
         out = self.sdf_conv_4(out)
+        out = F.relu(out)
+
         out = self.sdf_max_pooling_2(out)
         out = self.sdf_conv_5(out)
+        out = F.relu(out)
+
         out = self.sdf_conv_6(out)
+        out = F.relu(out)
+
         out = self.sdf_conv_7(out)
+        out = F.relu(out)
+
         out = self.sdf_max_pooling_3(out)
         out = self.sdf_conv_8(out)
+        out = F.relu(out)
+
         out = self.sdf_conv_9(out)
+        out = F.relu(out)
+
         out = self.sdf_conv_10(out)
+        out = F.relu(out)
+
         out = self.sdf_max_pooling_4(out)
         out = self.sdf_conv_11(out)
-        out = self.sdf_conv_12(out)
-        out = self.sdf_conv_13(out)
-        out = self.sdf_max_pooling_5(out)
-        out = self.sdf_conv_14(out)
-        print(out.shape)
+        out = F.relu(out)
 
-        x = l3_points.view(batch_size, 1024)
+        out = self.sdf_conv_12(out)
+        out = F.relu(out)
+
+        out = self.sdf_conv_13(out)
+        out = F.relu(out)
+
+        out = self.sdf_max_pooling_5(out)
+
+        out = self.sdf_conv_14(out)
+        out = F.relu(out)
+
+        x = out.view(batch_size, 1024 + 3)
         x = self.drop1(F.relu(self.bn1(self.fc1(x))))
         x = self.drop2(F.relu(self.bn2(self.fc2(x))))
         x = self.fc3(x)
