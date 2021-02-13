@@ -55,10 +55,9 @@ class Net(nn.Module):
 
         batch_size, _, _ = xyz_sdf.shape
 
-        field_feature = self.field_conv(xyz_sdf)
-        field_feature = field_feature.permute(0, 2, 1)
+        xyz_sdf = xyz_sdf.permute(0, 2, 1)
 
-        l1_xyz, l1_points = self.sa1(field_feature[:, :3, :], field_feature[:, 3:, :])
+        l1_xyz, l1_points = self.sa1(xyz_sdf[:, :3, :], xyz_sdf[:, 3:, :])
         l2_xyz, l2_points = self.sa2(l1_xyz, l1_points)
         l3_xyz, l3_points = self.sa3(l2_xyz, l2_points)
 
