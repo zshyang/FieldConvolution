@@ -152,6 +152,11 @@ class PointNetPlusPlus(Dataset):
         radius = self.radius_list[stage_identity[0]][stage_identity[1]]
         sdf = sdf * float(radius) / self.dataset.scalar
 
+        # revert the sdf.
+        last_sdf = sdf[:, 3]
+        last_sdf = 1 - np.abs(last_sdf)
+        sdf[:, 3] = last_sdf
+
         # label
         label = stage_identity[0]
         label = self.label_dict[label]
