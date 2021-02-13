@@ -6,7 +6,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from models.pointnet_util import PointNetSetAbstraction
 from easydict import EasyDict
-from models.layers.field_convolution import FieldConv
 
 
 class Net(nn.Module):
