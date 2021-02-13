@@ -1,6 +1,6 @@
 based_on:
   - nl_p2_00.yml
 dataset:
-  meta_fn: 10_fold/003.json
+  meta_fn: 10_fold/004.json
 num_workers: 5
-version: nl_fold03
+version: nl_fold04

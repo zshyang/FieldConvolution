@@ -153,9 +153,11 @@ class PointNetPlusPlus(Dataset):
         sdf = sdf * float(radius) / self.dataset.scalar
 
         # revert the sdf.
-        last_sdf = sdf[:, 3]
-        last_sdf = 1 - np.abs(last_sdf)
-        sdf[:, 3] = last_sdf
+        revert = False
+        if revert:
+            last_sdf = sdf[:, 3]
+            last_sdf = 1 - np.abs(last_sdf)
+            sdf[:, 3] = last_sdf
 
         # label
         label = stage_identity[0]
