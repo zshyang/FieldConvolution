@@ -21,7 +21,7 @@ class Net(nn.Module):
         """
         super(Net, self).__init__()
 
-        self.base_channel = 64  # Hard coded here.
+        self.base_channel = 16  # Hard coded here.
 
         image_size = 56.0
         cube_size = 2.0
@@ -143,7 +143,7 @@ class Net(nn.Module):
 
         self.num_class = options.model.out_channel
 
-        self.fc1 = nn.Linear(1024 + 3, 512)
+        self.fc1 = nn.Linear(self.base_channel * 16 + 3, 512)
         self.bn1 = nn.BatchNorm1d(512)
         self.drop1 = nn.Dropout(0.4)
         self.fc2 = nn.Linear(512, 256)
@@ -213,7 +213,7 @@ class Net(nn.Module):
         out = self.sdf_conv_14(out)
         out = F.relu(out)
 
-        x = out.view(batch_size, 1024 + 3)
+        x = out.view(batch_size, self.base_channel * 16 + 3)
         x = self.drop1(F.relu(self.bn1(self.fc1(x))))
         x = self.drop2(F.relu(self.bn2(self.fc2(x))))
         x = self.fc3(x)

@@ -233,7 +233,10 @@ class FieldConv(nn.Module):
         self.out_channels = out_channels
         self.feature_is_sdf = feature_is_sdf
 
-        self.weight_net = WeightNet(3, out_channels * in_channels)
+        self.weight_net = WeightNet(
+            3,
+            out_channels * (in_channels + 3)
+        )  # the in channel is hard coded with plus 3
 
         self.bias = Parameter(torch.empty(1, 1, out_channels))
         nn.init.kaiming_uniform_(self.bias, a=math.sqrt(5))
@@ -278,11 +281,14 @@ class FieldConv(nn.Module):
         weight = self.weight_net(grouped_xyz_norm)  # (B, Nc, Nn, I * O)
         weight_shape = list(weight.shape)
         weight_shape[-1] = self.out_channels
-        weight_shape.append(self.in_channels)
+        weight_shape.append(self.in_channels + 3)
         weight = weight.view(weight_shape)
 
         # Convolution input feature with the convolution weight and bias.
-        feature = torch.unsqueeze(grouped_feature, -1)  # (B, Nc, Nn, I, 1)
+        feature = torch.unsqueeze(
+            torch.cat([grouped_xyz_norm, grouped_feature], dim=-1),
+            -1
+        )  # (B, Nc, Nn, I, 1)
         feature = torch.einsum("abcij,abcjk->abcik", weight, feature)  # (B, Nc, Nn, O, 1)
         feature = torch.squeeze(feature, -1)  # (B, Nc, Nn, O)
         feature = torch.max(feature, 2)[0] + self.bias
