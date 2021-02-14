@@ -22,7 +22,7 @@ loss:
 model:
   in_channel: 3
   name:
-    - pointnet2_sdf  # python file name
+    - pointnet2_field_conv_1  # python file name
     - Net  # python class name
   out_channel: 2
 name: shapecad
@@ -56,7 +56,7 @@ train:
   shuffle: true
   summary_steps: 1  # How many steps to save the summary.
   test_epochs: 1  # How many epochs to do one test.
-version: gpu0
+version: gpu4
 vis:
   name:
     - shapecad_vis  # python file name
