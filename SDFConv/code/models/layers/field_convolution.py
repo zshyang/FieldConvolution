@@ -235,7 +235,7 @@ class FieldConv(nn.Module):
 
         self.weight_net = WeightNet(
             3,
-            out_channels * (in_channels + 3)
+            out_channels * in_channels
         )  # the in channel is hard coded with plus 3
 
         self.bias = Parameter(torch.empty(1, 1, out_channels))
@@ -281,17 +281,17 @@ class FieldConv(nn.Module):
         weight = self.weight_net(grouped_xyz_norm)  # (B, Nc, Nn, I * O)
         weight_shape = list(weight.shape)
         weight_shape[-1] = self.out_channels
-        weight_shape.append(self.in_channels + 3)
+        weight_shape.append(self.in_channels)
         weight = weight.view(weight_shape)
 
         # Convolution input feature with the convolution weight and bias.
         feature = torch.unsqueeze(
-            torch.cat([grouped_xyz_norm, grouped_feature], dim=-1),
+            grouped_feature,
             -1
         )  # (B, Nc, Nn, I, 1)
         feature = torch.einsum("abcij,abcjk->abcik", weight, feature)  # (B, Nc, Nn, O, 1)
         feature = torch.squeeze(feature, -1)  # (B, Nc, Nn, O)
-        feature = torch.max(feature, 2)[0] + self.bias
+        feature = torch.mean(feature, 2) + self.bias
 
         # Concatenate the new location and new feature.
         out_feature = torch.cat([new_xyz, feature], -1)
@@ -314,12 +314,13 @@ class WeightNet(nn.Module):
         self.dim_hid = dim_in * 2  # To keep the network's size.
         self.weight_net = nn.Sequential(
             nn.Linear(in_features=self.dim_in, out_features=self.dim_hid),
-            nn.ReLU(True),
             nn.BatchNorm1d(self.dim_hid),
+            nn.ReLU(True),
             nn.Linear(in_features=self.dim_hid, out_features=self.dim_hid),
-            nn.ReLU(True),
             nn.BatchNorm1d(self.dim_hid),
+            nn.ReLU(True),
             nn.Linear(in_features=self.dim_hid, out_features=self.dim_out),
+            nn.BatchNorm1d(self.dim_out),
         )
 
     def forward(self, feature: torch.Tensor) -> torch.Tensor:

@@ -15,3 +15,12 @@ test_acc_pn2 = [
 print("For pointnet++:")
 print(np.mean(test_acc_pn2))
 print(np.std(test_acc_pn2))
+
+# conv1 version
+test_acc = [
+    83.3333, 76.9231, 67.9487, 71.7949, 70.5128,
+    74.3590, 66.6667, 69.2308, 76.9231, 73.0769
+]
+print("For version 1:")
+print(np.mean(test_acc))
+print(np.std(test_acc))
