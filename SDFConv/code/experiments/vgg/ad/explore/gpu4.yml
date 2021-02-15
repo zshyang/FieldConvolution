@@ -27,7 +27,7 @@ model:
   out_channel: 2
 name: shapecad
 num_gpus: 1
-num_workers: 5
+num_workers: 18
 optim:
   adam_beta1: 0.9
   lr: 1.0e-4

@@ -291,7 +291,7 @@ class FieldConv(nn.Module):
         )  # (B, Nc, Nn, I, 1)
         feature = torch.einsum("abcij,abcjk->abcik", weight, feature)  # (B, Nc, Nn, O, 1)
         feature = torch.squeeze(feature, -1)  # (B, Nc, Nn, O)
-        feature = torch.mean(feature, 2) + self.bias
+        feature = torch.max(feature, 2)[0] + self.bias
 
         # Concatenate the new location and new feature.
         out_feature = torch.cat([new_xyz, feature], -1)
