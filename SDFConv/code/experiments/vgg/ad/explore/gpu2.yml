@@ -1,0 +1,11 @@
+based_on:
+  - gpu0.yml
+dataset:
+  name:
+    - pointnet2_field_conv_dg_1024  # python file name
+    - PointNetPlusPlus  # python class name
+model:
+  name:
+    - pointnet2_field_conv_1  # python file name
+    - Net  # python class name
+version: gpu2

@@ -3,6 +3,54 @@ import torch
 import torch.nn as nn
 from torch.nn.parameter import Parameter
 import math
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+
+
+def plot_weight(weight, xyz):
+    print(weight.shape, xyz.shape)
+    indexx = 3
+    indexy = 0
+    weight_sample = weight[:, :, :, indexx, indexy]
+    xyz_np = xyz.view(-1, 3).cpu().detach().numpy()
+    print(weight_sample.shape)
+    weight_py = weight_sample.view(-1).cpu().detach().numpy()
+    print(type(xyz_np))
+    print(xyz_np.shape)
+    print(xyz_np.min(0))
+    print(xyz_np.max(0))
+    wmin = weight_py.min()
+    wmax = weight_py.max()
+    wmid = wmin / 2 + wmax / 2
+
+    sample_number = 10000
+    weight_py = weight_py[:10000]
+    xyz_np = xyz_np[:10000, :]
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    x = xyz_np[weight_py < wmid, 0]
+    y = xyz_np[weight_py < wmid, 1]
+    z = xyz_np[weight_py < wmid, 2]
+    # z = z * 0
+
+    ax.scatter(x, y, z, c='r', marker='o')
+
+    x = xyz_np[weight_py >= wmid, 0]
+    y = xyz_np[weight_py >= wmid, 1]
+    z = xyz_np[weight_py >= wmid, 2]
+    # z = z * 0
+
+    ax.scatter(x, y, z, c='g', marker='x')
+
+    ax.set_xlabel('X Label')
+    ax.set_ylabel('Y Label')
+    ax.set_zlabel('Z Label')
+
+    plt.show()
+
+    print(xyz_np.dafsdf())
 
 
 def numpy_tensor(numpy_array: np.ndarray) -> torch.Tensor:
@@ -284,6 +332,10 @@ class FieldConv(nn.Module):
         weight_shape.append(self.in_channels)
         weight = weight.view(weight_shape)
 
+        plot = False
+        if plot:
+            plot_weight(weight, grouped_xyz_norm)
+
         # Convolution input feature with the convolution weight and bias.
         feature = torch.unsqueeze(
             grouped_feature,
@@ -320,7 +372,7 @@ class WeightNet(nn.Module):
             nn.BatchNorm1d(self.dim_hid),
             nn.ReLU(True),
             nn.Linear(in_features=self.dim_hid, out_features=self.dim_out),
-            nn.BatchNorm1d(self.dim_out),
+            # nn.BatchNorm1d(self.dim_out),
         )
 
     def forward(self, feature: torch.Tensor) -> torch.Tensor:

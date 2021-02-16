@@ -18,9 +18,6 @@ class FieldReLU(nn.Module):
         self
     ):
         """The initialization function.
-
-        Args:
-            center_number: The number of convolution centers. Equivalent to the stride of the filter. Noted as Nc.
         """
 
         super(FieldReLU, self).__init__()

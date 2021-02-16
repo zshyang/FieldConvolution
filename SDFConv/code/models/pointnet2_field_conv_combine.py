@@ -10,7 +10,6 @@ from models.layers.field_convolution import FieldConv
 from models.layers.sdf_bn import FieldBatchNormalization
 from models.layers.sdf_relu import FieldReLU
 
-
 class Net(nn.Module):
     """The PointNet++ classification model.
     """
@@ -35,7 +34,7 @@ class Net(nn.Module):
         self.num_class = options.model.out_channel
 
         self.sa1 = PointNetSetAbstraction(
-            npoint=512, radius=0.2, nsample=32, in_channel=self.in_channel+3, mlp=[64, 64, 128], group_all=False
+            npoint=512, radius=0.2, nsample=32, in_channel=128+3, mlp=[64, 64, 128], group_all=False
         )  # The in channels are increased by 3.
 
         self.sa1_conv1 = FieldConv(
@@ -92,19 +91,16 @@ class Net(nn.Module):
         field_feature = self.relu(self.fbn(field_feature))
 
         field_feature = self.sa1_conv1(field_feature)
-        field_feature = self.relu(self.fbn1(field_feature))
         field_feature = self.sa1_conv2(field_feature)
-        field_feature = self.relu(self.fbn2(field_feature))
         field_feature = self.sa1_conv3(field_feature)
-        field_feature = self.relu(self.fbn3(field_feature))
 
         field_feature = field_feature.permute(0, 2, 1)
 
-        l1_xyz, l1_points = self.sa2(field_feature[:, :3, :], field_feature[:, 3:, :])
-        l2_xyz, l2_points = self.sa3(l1_xyz, l1_points)
-        # l3_xyz, l3_points = self.sa3(l2_xyz, l2_points)
+        l1_xyz, l1_points = self.sa1(field_feature[:, :3, :], field_feature[:, 3:, :])
+        l2_xyz, l2_points = self.sa2(l1_xyz, l1_points)
+        l3_xyz, l3_points = self.sa3(l2_xyz, l2_points)
 
-        x = l2_points.view(batch_size, 1024)
+        x = l3_points.view(batch_size, 1024)
         x = self.drop1(F.relu(self.bn1(self.fc1(x))))
         x = self.drop2(F.relu(self.bn2(self.fc2(x))))
         x = self.fc3(x)

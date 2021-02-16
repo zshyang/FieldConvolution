@@ -62,8 +62,39 @@ class Net(nn.Module):
         self.sa2 = PointNetSetAbstraction(
             npoint=128, radius=0.4, nsample=64, in_channel=128 + 3, mlp=[128, 128, 256], group_all=False
         )
+        self.sa2_conv1 = FieldConv(
+            edge_length=0.8, filter_sample_number=8, center_number=128, in_channels=128,
+            out_channels=128,
+            feature_is_sdf=False,
+        )
+        self.sa2_conv2 = FieldConv(
+            edge_length=0.8, filter_sample_number=8, center_number=128, in_channels=128,
+            out_channels=128,
+            feature_is_sdf=False,
+        )
+        self.sa2_conv3 = FieldConv(
+            edge_length=0.8, filter_sample_number=8, center_number=128, in_channels=128,
+            out_channels=256,
+            feature_is_sdf=False,
+        )
+
         self.sa3 = PointNetSetAbstraction(
             npoint=None, radius=None, nsample=None, in_channel=256 + 3, mlp=[256, 512, 1024], group_all=True
+        )
+        self.sa3_conv1 = FieldConv(
+            edge_length=2.0, filter_sample_number=8, center_number=128, in_channels=256,
+            out_channels=256,
+            feature_is_sdf=False,
+        )
+        self.sa3_conv2 = FieldConv(
+            edge_length=2.0, filter_sample_number=8, center_number=128, in_channels=256,
+            out_channels=512,
+            feature_is_sdf=False,
+        )
+        self.sa3_conv3 = FieldConv(
+            edge_length=2.0, filter_sample_number=128, center_number=1, in_channels=512,
+            out_channels=1024,
+            feature_is_sdf=False,
         )
 
         self.fc1 = nn.Linear(1024, 512)
@@ -89,22 +120,37 @@ class Net(nn.Module):
         batch_size, _, _ = xyz_sdf.shape
 
         field_feature = self.field_conv(xyz_sdf)
-        field_feature = self.relu(self.fbn(field_feature))
+        # field_feature = self.relu(self.fbn(field_feature))
 
         field_feature = self.sa1_conv1(field_feature)
-        field_feature = self.relu(self.fbn1(field_feature))
+        # field_feature = self.relu(self.fbn1(field_feature))
         field_feature = self.sa1_conv2(field_feature)
-        field_feature = self.relu(self.fbn2(field_feature))
+        # field_feature = self.relu(self.fbn2(field_feature))
         field_feature = self.sa1_conv3(field_feature)
-        field_feature = self.relu(self.fbn3(field_feature))
+        # field_feature = self.relu(self.fbn3(field_feature))
 
-        field_feature = field_feature.permute(0, 2, 1)
-
-        l1_xyz, l1_points = self.sa2(field_feature[:, :3, :], field_feature[:, 3:, :])
-        l2_xyz, l2_points = self.sa3(l1_xyz, l1_points)
+        # field_feature = field_feature.permute(0, 2, 1)
+        #
+        # l1_xyz, l1_points = self.sa2(field_feature[:, :3, :], field_feature[:, 3:, :])
+        # l2_xyz, l2_points = self.sa3(l1_xyz, l1_points)
         # l3_xyz, l3_points = self.sa3(l2_xyz, l2_points)
 
-        x = l2_points.view(batch_size, 1024)
+        field_feature = self.sa2_conv1(field_feature)
+        # field_feature = self.relu(self.fbn1(field_feature))
+        field_feature = self.sa2_conv2(field_feature)
+        # field_feature = self.relu(self.fbn2(field_feature))
+        field_feature = self.sa2_conv3(field_feature)
+        # field_feature = self.relu(self.fbn3(field_feature))
+
+        field_feature = self.sa3_conv1(field_feature)
+        # field_feature = self.relu(self.fbn1(field_feature))
+        field_feature = self.sa3_conv2(field_feature)
+        # field_feature = self.relu(self.fbn2(field_feature))
+        field_feature = self.sa3_conv3(field_feature)
+        # print(field_feature.shape)
+        # field_feature = self.relu(self.fbn3(field_feature))
+
+        x = field_feature[:, :, 3:].view(batch_size, 1024)
         x = self.drop1(F.relu(self.bn1(self.fc1(x))))
         x = self.drop2(F.relu(self.bn2(self.fc2(x))))
         x = self.fc3(x)

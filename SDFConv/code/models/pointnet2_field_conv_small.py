@@ -10,7 +10,6 @@ from models.layers.field_convolution import FieldConv
 from models.layers.sdf_bn import FieldBatchNormalization
 from models.layers.sdf_relu import FieldReLU
 
-
 class Net(nn.Module):
     """The PointNet++ classification model.
     """
@@ -26,7 +25,7 @@ class Net(nn.Module):
 
         # The first field convolution layer.
         self.field_conv = FieldConv(
-            edge_length=0.03, filter_sample_number=64, center_number=16 ** 3, in_channels=1,
+            edge_length=0.003, filter_sample_number=16, center_number=16 ** 3, in_channels=1,
             out_channels=self.in_channel,
             feature_is_sdf=True,
         )
@@ -39,21 +38,21 @@ class Net(nn.Module):
         )  # The in channels are increased by 3.
 
         self.sa1_conv1 = FieldConv(
-            edge_length=0.4, filter_sample_number=32, center_number=512, in_channels=16,
+            edge_length=0.04, filter_sample_number=32, center_number=512, in_channels=16,
             out_channels=64,
             feature_is_sdf=False,
         )
         self.fbn1 = FieldBatchNormalization(64)
         self.relu = FieldReLU()
         self.sa1_conv2 = FieldConv(
-            edge_length=0.4, filter_sample_number=32, center_number=512, in_channels=64,
+            edge_length=0.04, filter_sample_number=32, center_number=512, in_channels=64,
             out_channels=64,
             feature_is_sdf=False,
         )
         self.fbn2 = FieldBatchNormalization(64)
         self.relu = FieldReLU()
         self.sa1_conv3 = FieldConv(
-            edge_length=0.4, filter_sample_number=32, center_number=512, in_channels=64,
+            edge_length=0.04, filter_sample_number=32, center_number=512, in_channels=64,
             out_channels=128,
             feature_is_sdf=False,
         )

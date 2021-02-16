@@ -8,6 +8,7 @@ from models.pointnet_util import PointNetSetAbstraction
 from easydict import EasyDict
 from models.layers.field_convolution import FieldConv
 from models.layers.sdf_pooling import FieldPooling
+from models.layers.sdf_relu import FieldReLU
 
 
 class Net(nn.Module):
@@ -27,6 +28,7 @@ class Net(nn.Module):
         cube_size = 2.0
 
         # the vgg network
+        self.relu = FieldReLU()
         self.sdf_conv_1 = FieldConv(
             edge_length=(cube_size / image_size * 3.0),
             filter_sample_number=(3 * 3), center_number=int(image_size * image_size),
@@ -166,52 +168,52 @@ class Net(nn.Module):
         batch_size, _, _ = xyz_sdf.shape
 
         out = self.sdf_conv_1(xyz_sdf)
-        out = F.relu(out)
+        out = self.relu(out)
 
         out = self.sdf_conv_2(out)
-        out = F.relu(out)
+        out = self.relu(out)
 
         out = self.sdf_max_pooling_1(out)
         out = self.sdf_conv_3(out)
-        out = F.relu(out)
+        out = self.relu(out)
 
         out = self.sdf_conv_4(out)
-        out = F.relu(out)
+        out = self.relu(out)
 
         out = self.sdf_max_pooling_2(out)
         out = self.sdf_conv_5(out)
-        out = F.relu(out)
+        out = self.relu(out)
 
         out = self.sdf_conv_6(out)
-        out = F.relu(out)
+        out = self.relu(out)
 
         out = self.sdf_conv_7(out)
-        out = F.relu(out)
+        out = self.relu(out)
 
         out = self.sdf_max_pooling_3(out)
         out = self.sdf_conv_8(out)
-        out = F.relu(out)
+        out = self.relu(out)
 
         out = self.sdf_conv_9(out)
-        out = F.relu(out)
+        out = self.relu(out)
 
         out = self.sdf_conv_10(out)
-        out = F.relu(out)
+        out = self.relu(out)
 
         out = self.sdf_max_pooling_4(out)
         out = self.sdf_conv_11(out)
-        out = F.relu(out)
+        out = self.relu(out)
 
         out = self.sdf_conv_12(out)
-        out = F.relu(out)
+        out = self.relu(out)
 
         out = self.sdf_conv_13(out)
-        out = F.relu(out)
+        out = self.relu(out)
 
         out = self.sdf_max_pooling_5(out)
 
         out = self.sdf_conv_14(out)
-        out = F.relu(out)
+        out = self.relu(out)
 
         x = out.view(batch_size, self.base_channel * 16 + 3)
         x = self.drop1(F.relu(self.bn1(self.fc1(x))))
