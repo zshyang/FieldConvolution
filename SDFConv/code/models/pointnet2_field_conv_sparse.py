@@ -108,8 +108,8 @@ class Net(nn.Module):
         batch_index = torch.arange(batch_size, dtype=torch.long).to(device).view(view_shape).repeat(repeat_shape)
 
         locations = xyz_sdf[:, :, :3]
-        locations = locations * 128
         locations = locations - locations.min()
+        locations = locations * 100
         locations = locations.long()
 
         locations = torch.cat([locations.view(-1, 3), batch_index.view(-1, 1)], dim=-1)
@@ -118,7 +118,7 @@ class Net(nn.Module):
         features = xyz_sdf[:, :, 3:]
         features = features.view(-1, 1)
 
-        print(locations.shape, features.shape)
+        # print(locations.shape, features.shape)
 
         # field_feature = self.field_conv(xyz_sdf)
         # field_feature = field_feature.permute(0, 2, 1)

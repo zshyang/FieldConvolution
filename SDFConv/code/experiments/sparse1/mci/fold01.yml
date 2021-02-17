@@ -1,0 +1,5 @@
+based_on:
+  - fold00.yml
+dataset:
+  meta_fn: 10_fold/001.json
+version: mci01

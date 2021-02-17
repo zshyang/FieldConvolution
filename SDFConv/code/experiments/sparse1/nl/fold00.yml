@@ -1,0 +1,66 @@
+checkpoint_dir: checkpoint
+dataset:
+  name:
+    - pointnet2_field_conv  # python file name
+    - PointNetPlusPlus  # python class name
+  label:
+    - NL_pos
+    - NL_neg
+  meta_fn: 10_fold/000.json
+  scalar: 40.0
+  data_augmentation: false
+  sdf_sample_number: 10000
+latest_checkpoint: false  # Once overwrite, useless.
+load_epoch: 5  # Once overwrite, useless.
+load_step: 80  # Once overwrite, useless.
+log_dir: log
+log_level: info
+loss:
+  name:
+    - classifier  # python file name
+    - CrossEntropyLoss  # python class name
+model:
+  in_channel: 3
+  name:
+    - pointnet2_field_conv_sparse  # python file name
+    - Net  # python class name
+  out_channel: 2
+name: shapecad
+num_gpus: 1
+num_workers: 5
+optim:
+  adam_beta1: 0.9
+  lr: 1.0e-4
+  lr_factor: 0.1
+  lr_step:
+    - 30
+    - 45
+  name: adam
+  sgd_momentum: 0.9
+  wd: 1.0e-06
+overwrite: true  # Only training is activated.
+pin_memory: true
+save_dir: ../data/save_ckpt_log_summary/sparse1
+seed: 4124036635
+summary_dir: summary
+test:
+  batch_size: 4
+  kc_steps: 20000
+  shuffle: true
+  summary_steps: 1  # How many steps to print the info.
+train:
+  batch_size: 4
+  checkpoint_steps: 1000 # How many steps to save the checkpoint.
+  kc_steps: 16
+  num_epochs: 100
+  shuffle: true
+  summary_steps: 1  # How many steps to save the summary.
+  test_epochs: 1  # How many epochs to do one test.
+version: nl00
+vis:
+  name:
+    - shapecad_vis  # python file name
+    - shapecad_vis  # python function name
+  dir: vis
+
+
