@@ -25,7 +25,7 @@ def create_logger(cfg, phase="train"):
     return logger
 
 
-def parse_logger(options: EasyDict):
+def parse_logger(options: EasyDict, logger):
     """parse the logger to get the validation epoch with the maximum accuracy.
     The path to the checkpoint file is updated.
 
@@ -76,6 +76,7 @@ def parse_logger(options: EasyDict):
                 os.remove(ckpt_file)
 
     print(val_acc_list[epoch - 1])
+    logger.info("Validation acc: {:.6f}".format(val_acc_list[epoch - 1]))
 
     # optionally plot the accuracy
     visualization = False

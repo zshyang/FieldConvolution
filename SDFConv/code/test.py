@@ -35,7 +35,7 @@ def main():
 
     logger, writer = reset_options(options, args, phase="test")
 
-    parse_logger(options)
+    parse_logger(options, logger)
 
     tester = Tester(options, logger, writer)
     tester.evaluate()
