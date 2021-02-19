@@ -1,0 +1,10 @@
+CUDA_VISIBLE_DEVICES=2 python train.py --options experiments/sparse2/nl/fold00.yml
+CUDA_VISIBLE_DEVICES=2 python test.py  --options experiments/sparse2/nl/fold00_t.yml
+CUDA_VISIBLE_DEVICES=2 python train.py --options experiments/sparse2/nl/fold01.yml
+CUDA_VISIBLE_DEVICES=2 python test.py  --options experiments/sparse2/nl/fold01_t.yml
+CUDA_VISIBLE_DEVICES=2 python train.py --options experiments/sparse2/nl/fold02.yml
+CUDA_VISIBLE_DEVICES=2 python test.py  --options experiments/sparse2/nl/fold02_t.yml
+CUDA_VISIBLE_DEVICES=2 python train.py --options experiments/sparse2/nl/fold03.yml
+CUDA_VISIBLE_DEVICES=2 python test.py  --options experiments/sparse2/nl/fold03_t.yml
+CUDA_VISIBLE_DEVICES=2 python train.py --options experiments/sparse2/nl/fold04.yml
+CUDA_VISIBLE_DEVICES=2 python test.py  --options experiments/sparse2/nl/fold04_t.yml

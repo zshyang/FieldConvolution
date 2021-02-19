@@ -84,3 +84,37 @@ test_acc = [
 print("For pointnet mci:")
 print(np.mean(test_acc))
 print(np.std(test_acc))
+
+# sparse vgg mci
+test_acc = [
+    50.0000,
+    51.4286,
+    58.5714,
+    64.2857,
+    50.0000,
+    64.2857,
+    55.7143,
+    48.5714,
+    54.2857,
+    55.7143,
+]
+print("For sparse vgg mci:")
+print(np.mean(test_acc))
+print(np.std(test_acc))
+
+# sparse vgg mci
+test_acc = [
+    60.5634,
+    64.7887,
+    63.3803,
+    60.5634,
+    56.3380,
+    66.1972,
+    56.3380,
+    50.7042,
+    56.3380,
+    52.1127,
+]
+print("For sparse vgg mci:")
+print(np.mean(test_acc))
+print(np.std(test_acc))

@@ -75,8 +75,10 @@ def parse_logger(options: EasyDict):
             if file_end != checkpoint_file:
                 os.remove(ckpt_file)
 
+    print(val_acc_list[epoch - 1])
+
     # optionally plot the accuracy
-    visualization = True
+    visualization = False
     if visualization:
         import matplotlib.pyplot as plt
         plt.plot(val_acc_list)

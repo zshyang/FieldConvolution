@@ -1,0 +1,5 @@
+based_on:
+  - fold00.yml
+dataset:
+  meta_fn: 10_fold/006.json
+version: ad06
