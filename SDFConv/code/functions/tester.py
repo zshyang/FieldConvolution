@@ -25,7 +25,10 @@ class Tester(CheckpointRunner):
             self.model = shared_model
         else:
             self.model = pick_model(self.options)
-            self.model = torch.nn.DataParallel(self.model, device_ids=self.gpus).cuda()
+            if len(self.gpus) > 1:
+                self.model = torch.nn.DataParallel(self.model, device_ids=self.gpus).cuda()
+            else:
+                self.model = self.model.cuda()
 
         # Create loss function.
         self.criterion = pick_loss(self.options)

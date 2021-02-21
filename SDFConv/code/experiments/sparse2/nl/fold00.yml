@@ -41,7 +41,7 @@ optim:
   wd: 1.0e-06
 overwrite: true  # Only training is activated.
 pin_memory: true
-save_dir: ../data/save_ckpt_log_summary/sparse1
+save_dir: ../data/save_ckpt_log_summary/sparse2
 seed: 4124036635
 summary_dir: summary
 test:
