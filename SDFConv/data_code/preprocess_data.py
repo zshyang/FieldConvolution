@@ -99,9 +99,9 @@ def generate_sdf_give_path(path_name):
     sdf_path = os.path.join("../data", "sdf", stage, identity, "sdf.npy")
     sdf_folder = os.path.dirname(sdf_path)
     os.makedirs(sdf_folder, exist_ok=True)
-    if os.path.exists(sdf_path):
-        print("{} already exists! Skip!".format(sdf_path))
-        return True
+    # if os.path.exists(sdf_path):
+    #     print("{} already exists! Skip!".format(sdf_path))
+    #     return True
 
     # get the names of the left and right mesh
     left_mesh_name_ = os.path.join(path_name, left_mesh_name)
@@ -126,6 +126,19 @@ def generate_sdf_give_path(path_name):
     mesh = trimesh.Trimesh(
         vertices=vertices, faces=faces, process=False
     )
+
+    # Render mesh for paper.
+    render_mesh = False
+    if render_mesh:
+        set_color = 100
+        set_color_a = 170
+        mesh.visual.face_colors = [set_color, set_color, set_color, set_color_a]
+        mesh.show()
+        scene = mesh.scene()
+        data = scene.save_image(resolution=(1080, 512))
+        from PIL import Image
+        rendered = Image.open(trimesh.util.wrap_as_stream(data))
+        rendered = rendered.save("mesh.png")
 
     # generate the sdf of the mesh
     points, sdf = sample_sdf_near_surface(mesh, number_of_points=250000)

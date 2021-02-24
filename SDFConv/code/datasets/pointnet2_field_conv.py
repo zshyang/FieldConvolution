@@ -345,5 +345,38 @@ def test_2():
     viewer = pyrender.Viewer(scene, **dict_args)
 
 
+def test_3():
+    config = None
+    dataset = EasyDict()
+    dataset.label = ["NL_neg"]
+    dataset.meta_fn = "10_fold/000.json"
+    dataset.scalar = 40.0
+    dataset.data_augmentation = False
+    dataset.sdf_sample_number = 1000000
+    training_stage = "train"
+
+    train_dt = PointNetPlusPlus(config=config, dataset=dataset, training=training_stage)
+    print(
+        "The length of the {} {} data set is {}".format(
+            dataset.label[0], training_stage, len(train_dt)
+        )
+    )
+
+    training_stage = "val"
+    dt = PointNetPlusPlus(config=config, dataset=dataset, training=training_stage)
+    print(
+        "The length of the {} {} data set is {}".format(
+            dataset.label[0], training_stage, len(dt)
+        )
+    )
+    training_stage = "test"
+    dt = PointNetPlusPlus(config=config, dataset=dataset, training=training_stage)
+    print(
+        "The length of the {} {} data set is {}".format(
+            dataset.label[0], training_stage, len(dt)
+        )
+    )
+
+
 if __name__ == '__main__':
-    test_2()
+    test_3()

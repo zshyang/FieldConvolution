@@ -126,6 +126,14 @@ class PointNetPlusPlus(Dataset):
         right_vertices = np.array(right_mesh.vertices, dtype=np.float32)
         vertices = np.concatenate((left_vertices, right_vertices), axis=0)
 
+        show_vertices = False
+        if show_vertices:
+            import pyrender
+            scene = pyrender.Scene()
+            visualize_point(vertices, scene)
+            dict_args = {"use_raymond_lighting": True, "point_size": 1, "show_world_axis": False}
+            viewer = pyrender.Viewer(scene, **dict_args)
+
         # furthest point sampling the vertices
         fps_vertices = farthest_point_sample(vertices, npoint=2500)
 
@@ -366,7 +374,7 @@ def test_9():
     dataset.label = ["AD_pos", "NL_neg"]
     dataset.meta_fn = "10_fold/000.json"
     dataset.scalar = None
-    dataset.data_augmentation = True
+    dataset.data_augmentation = False
 
     dt = PointNetPlusPlus(config=config, dataset=dataset, training="train")
     print(len(dt))
@@ -374,7 +382,7 @@ def test_9():
     point = dt[3]["point"]
     scene = pyrender.Scene()
     visualize_point(point, scene)
-    dict_args = {"use_raymond_lighting": True, "point_size": 2, "show_world_axis": True}
+    dict_args = {"use_raymond_lighting": True, "point_size": 4, "show_world_axis": False}
     viewer = pyrender.Viewer(scene, **dict_args)
 
 
@@ -402,4 +410,4 @@ def ref():
 
 
 if __name__ == '__main__':
-    test_2()
+    test_9()

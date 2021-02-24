@@ -1,0 +1,10 @@
+CUDA_VISIBLE_DEVICES=0 python train.py --options experiments/sparse2deep/mci/fold00.yml
+CUDA_VISIBLE_DEVICES=0 python test.py  --options experiments/sparse2deep/mci/fold00_t.yml
+CUDA_VISIBLE_DEVICES=0 python train.py --options experiments/sparse2deep/mci/fold01.yml
+CUDA_VISIBLE_DEVICES=0 python test.py  --options experiments/sparse2deep/mci/fold01_t.yml
+CUDA_VISIBLE_DEVICES=0 python train.py --options experiments/sparse2deep/mci/fold02.yml
+CUDA_VISIBLE_DEVICES=0 python test.py  --options experiments/sparse2deep/mci/fold02_t.yml
+CUDA_VISIBLE_DEVICES=0 python train.py --options experiments/sparse2deep/mci/fold03.yml
+CUDA_VISIBLE_DEVICES=0 python test.py  --options experiments/sparse2deep/mci/fold03_t.yml
+CUDA_VISIBLE_DEVICES=0 python train.py --options experiments/sparse2deep/mci/fold04.yml
+CUDA_VISIBLE_DEVICES=0 python test.py  --options experiments/sparse2deep/mci/fold04_t.yml

@@ -1,8 +1,8 @@
 based_on:
-  - ../../sparse1/mci/fold00.yml
+  - ../../sparse1/nl/fold00.yml
 model:
   name:
     - pointnet2_field_conv_sparse_2  # python file name
     - Net  # python class name
 save_dir: ../data/save_ckpt_log_summary/sparse2
-version: mci00
+version: nl00
