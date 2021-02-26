@@ -3,7 +3,7 @@ from parse import *
 import numpy as np
 
 
-version_name = "sparse2"
+version_name = "sparse2wide"
 # stage_name = "nl"
 stage_name = "mci"
 

@@ -378,5 +378,105 @@ def test_3():
     )
 
 
+def rotate_point_sdf(point_sdf):
+    point = point_sdf[:, :3]
+    from scipy.spatial.transform import Rotation as R
+    r1 = R.from_euler('x', 145, degrees=True).as_matrix()
+    point = point @ r1
+    point_sdf[:, :3] = point
+    return point_sdf
+
+
+def convert_sdf_to_meshgrid(point_sdf, depth, threshold):
+    resolution = 256
+    x = point_sdf[:, 0]
+    y = point_sdf[:, 1]
+    z = point_sdf[:, 2]
+    sdf = point_sdf[:, 3]
+    filter_depth = np.abs(z - depth) < threshold
+
+    x = x[filter_depth]
+    y = y[filter_depth]
+    sdf = sdf[filter_depth]
+    # sdf[sdf < 0.0] = sdf[sdf < 0.0] / sdf.min() * sdf.max() * -1.0
+    sdf[sdf < 0.0] = -1.0
+    sdf[sdf > 0.0] = 1.0
+
+    grid_y, grid_x = np.meshgrid(np.linspace(-1, 1, resolution), np.linspace(-1, 1, resolution))
+
+    x_index = np.floor((x + 1.0) / 2 * resolution).astype(np.int)
+    y_index = np.floor((y + 1.0) / 2 * resolution).astype(np.int)
+
+    z = grid_x * 0.0
+    z[x_index, y_index] = sdf
+
+    return grid_x, grid_y, z
+
+
+def test_4():
+    """Visualize the cross-section of the signed distance field.
+    """
+    print("In test 4, ")
+
+    config = None
+    dataset = EasyDict()
+    dataset.label = ["AD_pos", "NL_neg"]
+    dataset.meta_fn = "10_fold/000.json"
+    dataset.scalar = 40.0
+    dataset.data_augmentation = False
+    dataset.sdf_sample_number = 250000
+
+    print("For training data set: ")
+    train_dt = PointNetPlusPlus(config=config, dataset=dataset, training="train")
+    print("The length of the train data set is {}".format(len(train_dt)))
+    dt_item = train_dt[3]
+
+    # visualize the cross-section of the signed distance field
+    point_sdf = dt_item["point_sdf"]
+    point_sdf = rotate_point_sdf(point_sdf)
+
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    depth_min = -0.2
+    depth_max = -depth_min
+    depth_step = (depth_max - depth_min) / 20
+    for i in range(20):
+        depth = depth_min + depth_step * i
+        # generate 2 2d grids for the x & y bounds
+        x, y, z = convert_sdf_to_meshgrid(point_sdf, depth, 0.01)
+        z = z[:-1, :-1]
+        z_min, z_max = -np.abs(z).max(), np.abs(z).max()
+        fig, ax = plt.subplots()
+
+        c = ax.pcolormesh(x, y, z, cmap='RdBu', vmin=-1.0, vmax=1.0)
+        # ax.set_title('pcolormesh')
+        # set the limits of the plot to the limits of the data
+        ax.axis([x.min(), x.max(), y.min(), y.max()])
+        fig.colorbar(c, ax=ax)
+        cb = plt.colorbar()
+        cb.remove()
+        plt.axis("off")
+        plt.savefig("figures/{:03d}.png".format(i))
+
+
+def test_5():
+    """Load and cut the figures.
+    """
+    from PIL import Image
+    import os
+    for i in range(20):
+        filename = "figures/{:03d}.png".format(i)
+        image = Image.open(r"figures/{:03d}.png".format(i))
+        # print(image)
+        width = 400
+        height = 350
+        image = image.crop((90, 70, 75 + width, 55 + height))
+        # image = image[10:-10, 10:-100]
+        image.save("cropped_figures/{:03d}.png".format(i))
+        # image.show()
+        # break
+
+
 if __name__ == '__main__':
-    test_3()
+    test_5()
